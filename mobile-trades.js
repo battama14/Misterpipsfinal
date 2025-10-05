@@ -412,24 +412,25 @@ function showTradeModal() {
                         <option value="USD/JPY">USD/JPY</option>
                         <option value="AUD/USD">AUD/USD</option>
                         <option value="USD/CAD">USD/CAD</option>
+                        <option value="BTC/USD">BTC/USD (Bitcoin)</option>
                         <option value="XAU/USD">XAU/USD (Or)</option>
                     </select>
                 </div>
                 <div class="form-group">
                     <label>Point d'entrée:</label>
-                    <input type="number" id="entryPoint" step="0.00001" value="1.12345" required>
+                    <input type="number" id="entryPoint" step="0.00001" min="0" value="1.12345" required>
                 </div>
                 <div class="form-group">
                     <label>Stop Loss:</label>
-                    <input type="number" id="stopLoss" step="0.00001" value="1.12000" required>
+                    <input type="number" id="stopLoss" step="0.00001" min="0" value="1.12000" required>
                 </div>
                 <div class="form-group">
                     <label>Take Profit:</label>
-                    <input type="number" id="takeProfit" step="0.00001" value="1.13000" required>
+                    <input type="number" id="takeProfit" step="0.00001" min="0" value="1.13000" required>
                 </div>
                 <div class="form-group">
                     <label>Lot:</label>
-                    <input type="number" id="lotSize" step="0.01" value="0.10" required>
+                    <input type="number" id="lotSize" step="0.01" min="0.01" value="0.10" required>
                 </div>
                 <div class="form-buttons">
                     <button class="btn-submit" onclick="saveMobileTrade()">Enregistrer Trade</button>
@@ -453,6 +454,18 @@ function saveMobileTrade() {
 
     if (!currency || isNaN(entryPoint) || isNaN(stopLoss) || isNaN(takeProfit) || isNaN(lotSize)) {
         alert('Veuillez remplir tous les champs obligatoires');
+        return;
+    }
+
+    // Validation des valeurs négatives
+    if (entryPoint <= 0 || stopLoss <= 0 || takeProfit <= 0 || lotSize <= 0) {
+        alert('❌ Erreur: Les valeurs doivent être positives (pas de valeurs négatives ou nulles)');
+        return;
+    }
+
+    // Validation de cohérence
+    if (entryPoint === stopLoss || entryPoint === takeProfit || stopLoss === takeProfit) {
+        alert('❌ Erreur: Le point d\'entrée, le Stop Loss et le Take Profit doivent être différents');
         return;
     }
 
@@ -627,17 +640,34 @@ async function loadMobileRanking() {
                 sum + (parseFloat(trade.pnl) || 0), 0
             );
             
-            // Récupérer le pseudo avec PRIORITÉ sur nickname
+            // Récupérer le pseudo - ORDRE DE PRIORITÉ UNIFIÉ (identique PC)
             let nickname = 'Trader VIP';
             try {
-                const nicknameRef = window.dbRef(window.firebaseDB, `users/${uid}/nickname`);
-                const nicknameSnapshot = await window.dbGet(nicknameRef);
-                if (nicknameSnapshot.exists() && nicknameSnapshot.val()) {
-                    nickname = nicknameSnapshot.val();
+                // Priorité 1: users/{uid}/profile/nickname
+                const profileNicknameRef = window.dbRef(window.firebaseDB, `users/${uid}/profile/nickname`);
+                const profileSnapshot = await window.dbGet(profileNicknameRef);
+                if (profileSnapshot.exists() && profileSnapshot.val()) {
+                    nickname = profileSnapshot.val();
                 } else {
-                    nickname = userData.nickname || userData.displayName || userData.email?.split('@')[0] || 'Trader VIP';
+                    // Priorité 2: users/{uid}/nickname
+                    const nicknameRef = window.dbRef(window.firebaseDB, `users/${uid}/nickname`);
+                    const nicknameSnapshot = await window.dbGet(nicknameRef);
+                    if (nicknameSnapshot.exists() && nicknameSnapshot.val()) {
+                        nickname = nicknameSnapshot.val();
+                    } else {
+                        // Priorité 3: ranking/{uid}/nickname
+                        const rankingNicknameRef = window.dbRef(window.firebaseDB, `ranking/${uid}/nickname`);
+                        const rankingSnapshot = await window.dbGet(rankingNicknameRef);
+                        if (rankingSnapshot.exists() && rankingSnapshot.val()) {
+                            nickname = rankingSnapshot.val();
+                        } else {
+                            // Fallback: email ou displayName
+                            nickname = userData.nickname || userData.displayName || userData.email?.split('@')[0] || 'Trader VIP';
+                        }
+                    }
                 }
             } catch (error) {
+                console.error('Erreur récupération pseudo:', error);
                 nickname = userData.nickname || userData.displayName || userData.email?.split('@')[0] || 'Trader VIP';
             }
             
@@ -853,6 +883,8 @@ window.showPnLAnimation = showPnLAnimation;
 window.saveMobileTrade = saveMobileTrade;
 window.updateMobileCalendar = updateMobileCalendar;
 window.loadMobileRanking = loadMobileRanking;
+window.loadNotificationSettings = loadNotificationSettings;
+window.saveNotificationSettings = saveNotificationSettings;
 
 // Initialisation
 document.addEventListener('DOMContentLoaded', () => {
@@ -886,6 +918,11 @@ document.addEventListener('DOMContentLoaded', () => {
     document.getElementById('saveSettingsBtn')?.addEventListener('click', () => {
         saveMobileNickname();
     });
+    
+    // Event listeners pour les paramètres de notifications
+    document.getElementById('mobileSoundToggle')?.addEventListener('change', saveNotificationSettings);
+    document.getElementById('mobilePushToggle')?.addEventListener('change', saveNotificationSettings);
+    document.getElementById('mobileVibrateToggle')?.addEventListener('change', saveNotificationSettings);
     
     // Sauvegarde automatique toutes les 30 secondes
     setInterval(() => {
@@ -977,9 +1014,75 @@ async function loadMobileSettings() {
             if (monthlyTarget) monthlyTarget.textContent = `$${(mobileData.settings.capital * mobileData.settings.monthlyTarget / 100).toFixed(0)}`;
         }
         
+        // Charger les paramètres de notifications
+        loadNotificationSettings();
+        
         console.log('✅ Paramètres PC chargés sur mobile');
     } catch (error) {
         console.error('Erreur chargement paramètres:', error);
+    }
+}
+
+// Charger les paramètres de notifications
+function loadNotificationSettings() {
+    try {
+        const settings = JSON.parse(localStorage.getItem('mobileNotificationSettings')) || { 
+            sound: true, 
+            push: true, 
+            vibrate: true 
+        };
+        
+        const soundToggle = document.getElementById('mobileSoundToggle');
+        const pushToggle = document.getElementById('mobilePushToggle');
+        const vibrateToggle = document.getElementById('mobileVibrateToggle');
+        
+        if (soundToggle) soundToggle.checked = settings.sound;
+        if (pushToggle) pushToggle.checked = settings.push;
+        if (vibrateToggle) vibrateToggle.checked = settings.vibrate;
+        
+        console.log('✅ Paramètres notifications chargés:', settings);
+    } catch (error) {
+        console.error('Erreur chargement paramètres notifications:', error);
+    }
+}
+
+// Sauvegarder les paramètres de notifications
+function saveNotificationSettings() {
+    try {
+        const soundToggle = document.getElementById('mobileSoundToggle');
+        const pushToggle = document.getElementById('mobilePushToggle');
+        const vibrateToggle = document.getElementById('mobileVibrateToggle');
+        
+        const settings = {
+            sound: soundToggle ? soundToggle.checked : true,
+            push: pushToggle ? pushToggle.checked : true,
+            vibrate: vibrateToggle ? vibrateToggle.checked : true
+        };
+        
+        localStorage.setItem('mobileNotificationSettings', JSON.stringify(settings));
+        console.log('✅ Paramètres notifications sauvegardés:', settings);
+        
+        // Si les notifications push sont activées, demander la permission
+        if (settings.push && 'Notification' in window && Notification.permission === 'default') {
+            Notification.requestPermission().then(permission => {
+                console.log('🔔 Permission notifications:', permission);
+                if (permission === 'granted') {
+                    // Afficher une notification de test
+                    new Notification('✅ Notifications activées !', {
+                        body: 'Vous recevrez maintenant les notifications du chat VIP',
+                        icon: './Misterpips.jpg',
+                        badge: './Misterpips.jpg',
+                        vibrate: settings.vibrate ? [200, 100, 200] : [],
+                        silent: !settings.sound
+                    });
+                }
+            });
+        }
+        
+        return settings;
+    } catch (error) {
+        console.error('Erreur sauvegarde paramètres notifications:', error);
+        return null;
     }
 }
 

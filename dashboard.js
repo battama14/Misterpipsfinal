@@ -1058,11 +1058,17 @@ class SimpleTradingDashboard {
         let pnl = 0;
         
         if (currency === 'XAU/USD') {
+            // Or : 1 pip = $1 par 0.01 lot
+            pnl = priceDiff * lotSize * 100;
+        } else if (currency === 'BTC/USD') {
+            // Bitcoin : 1 point = $1 par 0.01 lot (similaire à l'or mais avec des mouvements plus grands)
             pnl = priceDiff * lotSize * 100;
         } else if (currency.includes('JPY')) {
+            // Paires JPY : 1 pip = 0.01
             const pipDiff = priceDiff * 100;
             pnl = pipDiff * lotSize * 10;
         } else {
+            // Paires standard : 1 pip = 0.0001
             const pipDiff = priceDiff * 10000;
             pnl = pipDiff * lotSize * 10;
         }
@@ -1270,24 +1276,25 @@ class SimpleTradingDashboard {
                         <option value="USD/JPY">USD/JPY</option>
                         <option value="AUD/USD">AUD/USD</option>
                         <option value="USD/CAD">USD/CAD</option>
+                        <option value="BTC/USD">BTC/USD (Bitcoin)</option>
                         <option value="XAU/USD">XAU/USD (Or)</option>
                     </select>
                 </div>
                 <div class="form-group">
                     <label>Point d'entrée:</label>
-                    <input type="number" id="entryPoint" step="0.00001" placeholder="1.12345">
+                    <input type="number" id="entryPoint" step="0.00001" min="0" placeholder="1.12345">
                 </div>
                 <div class="form-group">
                     <label>Stop Loss:</label>
-                    <input type="number" id="stopLoss" step="0.00001" placeholder="1.12000">
+                    <input type="number" id="stopLoss" step="0.00001" min="0" placeholder="1.12000">
                 </div>
                 <div class="form-group">
                     <label>Take Profit:</label>
-                    <input type="number" id="takeProfit" step="0.00001" placeholder="1.13000">
+                    <input type="number" id="takeProfit" step="0.00001" min="0" placeholder="1.13000">
                 </div>
                 <div class="form-group">
                     <label>Lot:</label>
-                    <input type="number" id="lotSize" step="0.01" placeholder="0.10">
+                    <input type="number" id="lotSize" step="0.01" min="0.01" placeholder="0.10">
                 </div>
                 <div class="form-buttons">
                     <button class="btn-submit" onclick="dashboard.saveTrade()">Enregistrer Trade</button>
@@ -1306,6 +1313,18 @@ class SimpleTradingDashboard {
 
         if (!currency || !entryPoint || !stopLoss || !takeProfit || !lotSize) {
             alert('Veuillez remplir tous les champs obligatoires');
+            return;
+        }
+
+        // Validation des valeurs négatives
+        if (entryPoint <= 0 || stopLoss <= 0 || takeProfit <= 0 || lotSize <= 0) {
+            alert('❌ Erreur: Les valeurs doivent être positives');
+            return;
+        }
+
+        // Validation de la cohérence du trade
+        if (entryPoint === stopLoss || entryPoint === takeProfit) {
+            alert('❌ Erreur: Le point d\'entrée ne peut pas être égal au SL ou TP');
             return;
         }
 
@@ -1490,24 +1509,25 @@ class SimpleTradingDashboard {
                         <option value="USD/JPY" ${trade.currency === 'USD/JPY' ? 'selected' : ''}>USD/JPY</option>
                         <option value="AUD/USD" ${trade.currency === 'AUD/USD' ? 'selected' : ''}>AUD/USD</option>
                         <option value="USD/CAD" ${trade.currency === 'USD/CAD' ? 'selected' : ''}>USD/CAD</option>
+                        <option value="BTC/USD" ${trade.currency === 'BTC/USD' ? 'selected' : ''}>BTC/USD (Bitcoin)</option>
                         <option value="XAU/USD" ${trade.currency === 'XAU/USD' ? 'selected' : ''}>XAU/USD (Or)</option>
                     </select>
                 </div>
                 <div class="form-group">
                     <label>Point d'entrée:</label>
-                    <input type="number" id="editEntryPoint" step="0.00001" value="${trade.entryPoint}">
+                    <input type="number" id="editEntryPoint" step="0.00001" min="0" value="${trade.entryPoint}">
                 </div>
                 <div class="form-group">
                     <label>Stop Loss:</label>
-                    <input type="number" id="editStopLoss" step="0.00001" value="${trade.stopLoss}">
+                    <input type="number" id="editStopLoss" step="0.00001" min="0" value="${trade.stopLoss}">
                 </div>
                 <div class="form-group">
                     <label>Take Profit:</label>
-                    <input type="number" id="editTakeProfit" step="0.00001" value="${trade.takeProfit}">
+                    <input type="number" id="editTakeProfit" step="0.00001" min="0" value="${trade.takeProfit}">
                 </div>
                 <div class="form-group">
                     <label>Lot:</label>
-                    <input type="number" id="editLotSize" step="0.01" value="${trade.lotSize}">
+                    <input type="number" id="editLotSize" step="0.01" min="0.01" value="${trade.lotSize}">
                 </div>
                 <div class="form-buttons">
                     <button class="btn-submit" onclick="dashboard.saveEditedTrade(${index})">Sauvegarder</button>
@@ -1570,24 +1590,25 @@ class SimpleTradingDashboard {
                         <option value="USD/JPY" ${trade.currency === 'USD/JPY' ? 'selected' : ''}>USD/JPY</option>
                         <option value="AUD/USD" ${trade.currency === 'AUD/USD' ? 'selected' : ''}>AUD/USD</option>
                         <option value="USD/CAD" ${trade.currency === 'USD/CAD' ? 'selected' : ''}>USD/CAD</option>
+                        <option value="BTC/USD" ${trade.currency === 'BTC/USD' ? 'selected' : ''}>BTC/USD (Bitcoin)</option>
                         <option value="XAU/USD" ${trade.currency === 'XAU/USD' ? 'selected' : ''}>XAU/USD (Or)</option>
                     </select>
                 </div>
                 <div class="form-group">
                     <label>Point d'entrée:</label>
-                    <input type="number" id="editEntryPoint" step="0.00001" value="${trade.entryPoint}">
+                    <input type="number" id="editEntryPoint" step="0.00001" min="0" value="${trade.entryPoint}">
                 </div>
                 <div class="form-group">
                     <label>Stop Loss:</label>
-                    <input type="number" id="editStopLoss" step="0.00001" value="${trade.stopLoss}">
+                    <input type="number" id="editStopLoss" step="0.00001" min="0" value="${trade.stopLoss}">
                 </div>
                 <div class="form-group">
                     <label>Take Profit:</label>
-                    <input type="number" id="editTakeProfit" step="0.00001" value="${trade.takeProfit}">
+                    <input type="number" id="editTakeProfit" step="0.00001" min="0" value="${trade.takeProfit}">
                 </div>
                 <div class="form-group">
                     <label>Lot:</label>
-                    <input type="number" id="editLotSize" step="0.01" value="${trade.lotSize}">
+                    <input type="number" id="editLotSize" step="0.01" min="0.01" value="${trade.lotSize}">
                 </div>
                 ${trade.status === 'closed' ? `
                 <div class="form-group">
@@ -1727,24 +1748,25 @@ class SimpleTradingDashboard {
                         <option value="USD/JPY">USD/JPY</option>
                         <option value="AUD/USD">AUD/USD</option>
                         <option value="USD/CAD">USD/CAD</option>
+                        <option value="BTC/USD">BTC/USD (Bitcoin)</option>
                         <option value="XAU/USD">XAU/USD (Or)</option>
                     </select>
                 </div>
                 <div class="form-group">
                     <label>Point d'entrée:</label>
-                    <input type="number" id="historyEntryPoint" step="0.00001" placeholder="1.12345">
+                    <input type="number" id="historyEntryPoint" step="0.00001" min="0" placeholder="1.12345">
                 </div>
                 <div class="form-group">
                     <label>Stop Loss:</label>
-                    <input type="number" id="historyStopLoss" step="0.00001" placeholder="1.12000">
+                    <input type="number" id="historyStopLoss" step="0.00001" min="0" placeholder="1.12000">
                 </div>
                 <div class="form-group">
                     <label>Take Profit:</label>
-                    <input type="number" id="historyTakeProfit" step="0.00001" placeholder="1.13000">
+                    <input type="number" id="historyTakeProfit" step="0.00001" min="0" placeholder="1.13000">
                 </div>
                 <div class="form-group">
                     <label>Lot:</label>
-                    <input type="number" id="historyLotSize" step="0.01" placeholder="0.10">
+                    <input type="number" id="historyLotSize" step="0.01" min="0.01" placeholder="0.10">
                 </div>
                 <div class="form-group">
                     <label>Résultat:</label>

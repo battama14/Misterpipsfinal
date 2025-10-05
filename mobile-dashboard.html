@@ -348,21 +348,24 @@
     <script src="vip-redirect-fix.js"></script>
     <script src="mobile-errors-fix.js"></script>
     <script src="nickname-sync-fix.js"></script>
+    <script src="nickname-sync-unified.js"></script>
     <script src="popup-fix.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
     <script src="mobile-trades.js"></script>
     <script src="ranking-nickname-sync.js"></script>
 
     <script src="fix-nickname-mobile.js"></script>
 
     <script src="mobile-functions-check.js"></script>
+    <script src="mobile-fix-urgent.js"></script>
     <script>
         // Variables globales
         let currentUser = null;
         let mobilePerformanceChart = null;
         let mobileWinRateChart = null;
         
-        // Initialiser les graphiques mobiles
+        // COMMENTÉ - Utilise maintenant initMobileChartsForced() dans mobile-fix-urgent.js
+        /*
         function initMobileCharts() {
             const perfCtx = document.getElementById('mobilePerformanceChart');
             const winCtx = document.getElementById('mobileWinRateChart');
@@ -406,6 +409,7 @@
                 });
             }
         }
+        */
         
         // Mettre à jour les graphiques
         function updateMobileCharts() {
@@ -503,8 +507,8 @@
                 });
             }
             
-            // Initialiser les graphiques
-            setTimeout(initMobileCharts, 1000);
+            // COMMENTÉ - Les graphiques sont maintenant initialisés par mobile-fix-urgent.js
+            // setTimeout(initMobileCharts, 1000);
             
             // Exposer la fonction de mise à jour
             window.updateMobileCharts = updateMobileCharts;

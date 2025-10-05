@@ -1193,6 +1193,21 @@ input::placeholder {
     color: rgba(255, 255, 255, 0.5);
 }
 
+/* Fix pour les options du select - rendre toutes les options visibles */
+select option {
+    background: #1a1a1a;
+    color: #ffffff;
+    padding: 10px;
+    font-size: 1rem;
+}
+
+select option:hover,
+select option:focus,
+select option:checked {
+    background: linear-gradient(135deg, #00d4ff, #5b86e5);
+    color: #ffffff;
+}
+
 /* Form Groups */
 .form-group {
     margin-bottom: 20px;

@@ -108,15 +108,31 @@ class VIPRanking {
                     
                     const winRate = totalTrades > 0 ? (winningTrades / totalTrades * 100) : 0;
 
-                    // Récupérer le pseudo du chat
+                    // Récupérer le pseudo - ORDRE DE PRIORITÉ UNIFIÉ
                     let nickname = 'Trader VIP';
                     try {
-                        const nicknameRef = ref(window.firebaseDB, `users/${uid}/nickname`);
-                        const nicknameSnapshot = await get(nicknameRef);
-                        if (nicknameSnapshot.exists()) {
-                            nickname = nicknameSnapshot.val();
+                        // Priorité 1: users/{uid}/profile/nickname
+                        const profileNicknameRef = ref(window.firebaseDB, `users/${uid}/profile/nickname`);
+                        const profileSnapshot = await get(profileNicknameRef);
+                        if (profileSnapshot.exists() && profileSnapshot.val()) {
+                            nickname = profileSnapshot.val();
                         } else {
-                            nickname = userData.displayName || userData.email?.split('@')[0] || 'Trader VIP';
+                            // Priorité 2: users/{uid}/nickname
+                            const nicknameRef = ref(window.firebaseDB, `users/${uid}/nickname`);
+                            const nicknameSnapshot = await get(nicknameRef);
+                            if (nicknameSnapshot.exists() && nicknameSnapshot.val()) {
+                                nickname = nicknameSnapshot.val();
+                            } else {
+                                // Priorité 3: ranking/{uid}/nickname
+                                const rankingNicknameRef = ref(window.firebaseDB, `ranking/${uid}/nickname`);
+                                const rankingSnapshot = await get(rankingNicknameRef);
+                                if (rankingSnapshot.exists() && rankingSnapshot.val()) {
+                                    nickname = rankingSnapshot.val();
+                                } else {
+                                    // Fallback: email ou displayName
+                                    nickname = userData.displayName || userData.email?.split('@')[0] || 'Trader VIP';
+                                }
+                            }
                         }
                     } catch (error) {
                         console.error('Erreur récupération pseudo:', error);

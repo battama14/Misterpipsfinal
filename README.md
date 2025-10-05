@@ -64,22 +64,59 @@ Cette version optimisée de Misterpips offre une expérience de trading complèt
 ## 📁 Structure des Fichiers
 
 ```
-Misterpips-Optimized/
-├── index.html              # Page d'accueil
-├── dashboard.html          # Dashboard PC
-├── mobile-dashboard.html   # Dashboard mobile
-├── styles.css             # CSS principal
-├── dashboard.css          # CSS dashboard PC
-├── mobile.css             # CSS mobile
-├── script.js              # JavaScript principal
-├── dashboard.js           # JavaScript dashboard PC
-├── mobile.js              # JavaScript mobile
-├── chat.js                # Système de chat
-├── manifest.json          # Manifest PWA
-├── sw.js                  # Service Worker
-├── Misterpips.jpg         # Logo/Icon
-└── README.md              # Documentation
+Misterpips-mainDEPL/
+├── 📄 Fichiers Principaux
+│   ├── index.html              # Page d'accueil
+│   ├── dashboard.html          # Dashboard PC
+│   ├── mobile-dashboard.html   # Dashboard mobile
+│   ├── vip-space.html         # Espace VIP
+│   └── admin-dashboard.html   # Dashboard admin
+│
+├── 🎨 Styles CSS
+│   ├── styles.css             # CSS principal
+│   ├── dashboard.css          # CSS dashboard PC
+│   ├── dashboard-clean.css    # CSS dashboard optimisé
+│   ├── mobile*.css            # CSS mobile (multiples)
+│   └── planning-forex.css     # CSS planning
+│
+├── 💻 Scripts JavaScript
+│   ├── script.js              # JavaScript principal
+│   ├── dashboard.js           # JavaScript dashboard PC
+│   ├── mobile-trades.js       # JavaScript mobile
+│   ├── chat.js                # Système de chat
+│   ├── chat-notifications.js  # Notifications chat
+│   ├── vip-ranking.js         # Classement VIP
+│   └── *-fix.js               # Scripts de correction
+│
+├── 📱 PWA
+│   ├── manifest.json          # Manifest PWA
+│   ├── sw.js                  # Service Worker
+│   └── firebase-messaging-sw.js # Service Worker Firebase
+│
+├── 📚 DOCUMENTATION/
+│   ├── INDEX.md               # Index de la documentation
+│   ├── GUIDE-TEST-RAPIDE.md   # Guide de test rapide
+│   ├── RESUME-MODIFICATIONS-FINALES.md # Résumé des modifications
+│   ├── test-*.html            # Fichiers de test
+│   └── ... (voir DOCUMENTATION/INDEX.md)
+│
+└── 🖼️ Assets
+    ├── Misterpips.jpg         # Logo/Icon
+    ├── step*.svg              # Illustrations
+    └── pips book2.pdf         # Documentation trading
 ```
+
+## 📚 Documentation
+
+Toute la documentation, les guides de test et les fichiers d'explication ont été déplacés dans le dossier **DOCUMENTATION/**.
+
+Pour accéder à la documentation complète :
+👉 **[Voir DOCUMENTATION/INDEX.md](DOCUMENTATION/INDEX.md)**
+
+### Documents Essentiels
+- **[Guide de Test Rapide](DOCUMENTATION/GUIDE-TEST-RAPIDE.md)** - Tests en 5 minutes
+- **[Résumé des Modifications](DOCUMENTATION/RESUME-MODIFICATIONS-FINALES.md)** - Dernières modifications
+- **[Guide Notifications](DOCUMENTATION/GUIDE-NOTIFICATIONS-UTILISATEUR.md)** - Configuration des notifications
 
 ## 🚀 Installation et Utilisation
 

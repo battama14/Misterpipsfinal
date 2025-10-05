@@ -351,6 +351,10 @@ body {
     width: 100% !important;
     height: auto !important;
     max-height: 200px;
+    display: block !important;
+    visibility: visible !important;
+    opacity: 1 !important;
+    min-height: 150px !important;
 }
 
 .stat-card {
@@ -1287,6 +1291,13 @@ input:checked + .slider:before {
 
 .message-time {
     font-style: italic;
+}
+
+.no-messages {
+    text-align: center;
+    padding: 40px 20px;
+    color: rgba(255, 255, 255, 0.5);
+    font-size: 16px;
 }
 
 .chat-input-container {
