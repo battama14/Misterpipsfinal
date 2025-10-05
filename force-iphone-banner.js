@@ -1,6 +1,4 @@
-// Force banner iPhone - Test immédiat
-console.log('🍎 Force banner iPhone');
-
+// Banner iPhone PWA - Production
 function showInstallBannerNow() {
     // Supprimer ancien banner
     const oldBanner = document.getElementById('iphone-install-banner');
@@ -42,23 +40,11 @@ function showInstallBannerNow() {
     `;
     
     document.body.appendChild(banner);
-    console.log('✅ Banner iPhone affiché');
 }
 
-// Afficher immédiatement
-setTimeout(showInstallBannerNow, 100);
-
-// Bouton de test
-setTimeout(() => {
-    const testBtn = document.createElement('button');
-    testBtn.textContent = '📱 Test Banner iPhone';
-    testBtn.style.cssText = `
-        position: fixed; bottom: 20px; right: 20px; z-index: 9999;
-        background: #007AFF; color: white; border: none;
-        padding: 10px 15px; border-radius: 25px; font-size: 14px;
-    `;
-    testBtn.onclick = showInstallBannerNow;
-    document.body.appendChild(testBtn);
-}, 2000);
+// Afficher seulement sur iPhone/iPad Safari
+if (/iPhone|iPad/.test(navigator.userAgent) && /Safari/.test(navigator.userAgent) && !/CriOS|FxiOS/.test(navigator.userAgent)) {
+    setTimeout(showInstallBannerNow, 2000);
+}
 
 window.showInstallBannerNow = showInstallBannerNow;
