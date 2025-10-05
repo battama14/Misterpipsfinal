@@ -72,7 +72,6 @@
     <header class="mobile-header">
         <div class="header-top">
             <h1>📱 Misterpips</h1>
-            <button id="activateNotifBtn" style="position: fixed; top: 20px; right: 20px; z-index: 99999; background: #ff4757; color: white; border: none; padding: 10px 15px; border-radius: 25px; font-size: 14px; font-weight: bold;">🔔 NOTIF</button>
             <button id="menuToggle" class="menu-btn">☰</button>
         </div>
         <div class="account-selector">
@@ -323,13 +322,13 @@
             <span class="nav-icon">📅</span>
             <span class="nav-label">Calendrier</span>
         </button>
-        <button class="nav-btn" onclick="showMobileSection('ranking')">
-            <span class="nav-icon">🏆</span>
-            <span class="nav-label">Classement</span>
-        </button>
         <button class="nav-btn" onclick="showMobileSection('chat'); resetUnreadCount();">
             <span class="nav-icon">💬</span>
             <span class="nav-label">Chat</span>
+        </button>
+        <button class="nav-btn" onclick="showMobileSection('ranking')">
+            <span class="nav-icon">🏆</span>
+            <span class="nav-label">Classement</span>
         </button>
     </nav>
 
@@ -599,23 +598,7 @@
                 });
             }
             
-            // Bouton notifications direct
-            const notifBtn = document.getElementById('activateNotifBtn');
-            if (notifBtn) {
-                notifBtn.onclick = async () => {
-                    if ('Notification' in window) {
-                        const permission = await Notification.requestPermission();
-                        if (permission === 'granted') {
-                            new Notification('✅ Notifications activées !', {
-                                body: 'Vous recevrez les messages du chat VIP',
-                                icon: './Misterpips.jpg'
-                            });
-                            notifBtn.textContent = '✅ OK';
-                            notifBtn.style.background = '#28a745';
-                        }
-                    }
-                };
-            }
+
             
             // Initialiser après Firebase
             setTimeout(() => {
