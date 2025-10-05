@@ -1,0 +1,1219 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+    <title>Misterpips Mobile</title>
+    <link rel="stylesheet" href="mobile-optimized.css?v=2025">
+    <link rel="stylesheet" href="mobile-notifications.css?v=2025">
+    <link rel="manifest" href="manifest.json">
+    <meta name="theme-color" content="#00d4ff">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="apple-mobile-web-app-title" content="Misterpips">
+    <link rel="apple-touch-icon" href="Misterpips.jpg">
+
+    <script type="module">
+        import { initializeApp } from 'https://www.gstatic.com/firebasejs/10.7.0/firebase-app.js';
+        import { getAuth, onAuthStateChanged } from 'https://www.gstatic.com/firebasejs/10.7.0/firebase-auth.js';
+        import { getDatabase, ref, set, get, onValue, push } from 'https://www.gstatic.com/firebasejs/10.7.0/firebase-database.js';
+        
+        const firebaseConfig = {
+            apiKey: "AIzaSyDSDK0NfVSs_VQb3TnrixiJbOpTsmoUMvU",
+            authDomain: "misterpips-b71fb.firebaseapp.com",
+            databaseURL: "https://misterpips-b71fb-default-rtdb.europe-west1.firebasedatabase.app",
+            projectId: "misterpips-b71fb",
+            storageBucket: "misterpips-b71fb.firebasestorage.app",
+            messagingSenderId: "574231126409",
+            appId: "1:574231126409:web:b7ed93ac4ea62e247dc158"
+        };
+        
+        const app = initializeApp(firebaseConfig);
+        const auth = getAuth(app);
+        const db = getDatabase(app);
+        
+        window.firebaseDB = db;
+        window.firebaseAuth = auth;
+        window.dbRef = ref;
+        window.dbGet = get;
+        window.dbSet = set;
+        window.onValue = onValue;
+        window.push = push;
+        
+        // Exposer les modules Firebase
+        window.firebaseModules = {
+            ref, get, set, onValue, push
+        };
+        
+        onAuthStateChanged(auth, (user) => {
+            if (!user) {
+                window.location.href = 'index.html';
+            } else {
+                // Éviter les doubles connexions
+                if (window.userConnected) return;
+                window.userConnected = true;
+                
+                sessionStorage.setItem('firebaseUID', user.uid);
+                sessionStorage.setItem('userEmail', user.email);
+                console.log('🔥 Mobile Firebase prêt:', user.email);
+                
+                // Charger le pseudo automatiquement
+                setTimeout(() => {
+                    if (window.loadMobileNicknameSimple) {
+                        window.loadMobileNicknameSimple();
+                    }
+                }, 500);
+            }
+        });
+    </script>
+</head>
+<body>
+    <!-- Header Mobile -->
+    <header class="mobile-header">
+        <div class="header-top">
+            <h1>📱 Misterpips</h1>
+            <button id="activateNotifBtn" style="position: fixed; top: 20px; right: 20px; z-index: 99999; background: #ff4757; color: white; border: none; padding: 10px 15px; border-radius: 25px; font-size: 14px; font-weight: bold;">🔔 NOTIF</button>
+            <button id="menuToggle" class="menu-btn">☰</button>
+        </div>
+        <div class="account-selector">
+            <select id="headerAccountSelect" class="account-select">
+                <option value="default">Compte Principal</option>
+            </select>
+        </div>
+        <div class="stats-row">
+            <div class="stat-item">
+                <span class="stat-value" id="mobileCapital">$1000</span>
+                <span class="stat-label">Capital</span>
+            </div>
+            <div class="stat-item">
+                <span class="stat-value" id="mobileWinRate">0%</span>
+                <span class="stat-label">WinRate</span>
+            </div>
+            <div class="stat-item">
+                <span class="stat-value" id="mobilePnL">$0</span>
+                <span class="stat-label">P&L</span>
+            </div>
+        </div>
+    </header>
+
+    <!-- Overlay Menu -->
+    <div id="menuOverlay" class="menu-overlay"></div>
+    
+    <!-- Menu Mobile -->
+    <nav id="mobileMenu" class="mobile-menu">
+        <div class="menu-header">
+            <h3>Menu</h3>
+            <button id="closeMenu" class="close-btn">✕</button>
+        </div>
+        <ul class="menu-list">
+            <li><a href="#dashboard" data-section="dashboard">📊 Dashboard</a></li>
+            <li><a href="#trades" data-section="trades">📈 Mes Trades</a></li>
+            <li><a href="#calendar" data-section="calendar">📅 Calendrier</a></li>
+            <li><a href="#objectives" data-section="objectives">🎯 Objectifs</a></li>
+            <li><a href="#ranking" data-section="ranking">🏆 Classement</a></li>
+            <li><a href="#settings" data-section="settings">💬 Chat VIP</a></li>
+            <li><a href="#settings" data-section="settings">⚙️ Paramètres</a></li>
+            <li><a href="index.html">🚪 Déconnexion</a></li>
+        </ul>
+    </nav>
+
+    <!-- Contenu Principal -->
+    <main class="mobile-main">
+        <!-- Section Dashboard -->
+        <section id="dashboard" class="section active">
+            <div class="section-header">
+                <h2>📊 Dashboard</h2>
+                <button id="newTradeBtn" class="primary-btn">+ Trade</button>
+            </div>
+            
+            <div class="stats-grid">
+                <div class="stat-card">
+                    <h4>Trades Totaux</h4>
+                    <span id="totalTrades">0</span>
+                </div>
+                <div class="stat-card">
+                    <h4>Trades Gagnants</h4>
+                    <span id="winningTrades">0</span>
+                </div>
+                <div class="stat-card">
+                    <h4>Trades Perdants</h4>
+                    <span id="losingTrades">0</span>
+                </div>
+                <div class="stat-card">
+                    <h4>Profit Total</h4>
+                    <span id="totalProfit">$0</span>
+                </div>
+            </div>
+            
+            <!-- Graphiques Mobile -->
+            <div class="charts-container">
+                <div class="chart-card">
+                    <h4>Performance</h4>
+                    <canvas id="mobilePerformanceChart" width="300" height="200"></canvas>
+                </div>
+                <div class="chart-card">
+                    <h4>Taux de Réussite</h4>
+                    <canvas id="mobileWinRateChart" width="200" height="200"></canvas>
+                </div>
+            </div>
+        </section>
+
+        <!-- Section Trades -->
+        <section id="trades" class="section">
+            <div class="section-header">
+                <h2>📈 Mes Trades</h2>
+                <button id="addTradeBtn" class="primary-btn">+ Ajouter</button>
+            </div>
+            
+            <div class="trades-list" id="mobileTradesList">
+                <div class="no-trades">Aucun trade pour le moment</div>
+            </div>
+        </section>
+
+        <!-- Section Calendrier -->
+        <section id="calendar" class="section">
+            <div class="section-header">
+                <h2>📅 Calendrier</h2>
+            </div>
+            <div class="mobile-calendar" id="mobileCalendar">Calendrier</div>
+        </section>
+
+        <!-- Section Objectifs -->
+        <section id="objectives" class="section">
+            <div class="section-header">
+                <h2>🎯 Objectifs</h2>
+            </div>
+            <div class="objectives-list">
+                <div class="objective-card">
+                    <div class="objective-header">
+                        <span class="objective-icon">☀️</span>
+                        <span class="objective-title">Journalier</span>
+                        <span class="objective-target" id="mobileDailyTarget">$10</span>
+                    </div>
+                    <div class="progress-bar">
+                        <div class="progress-fill" id="mobileDailyProgress"></div>
+                    </div>
+                    <span class="progress-text" id="mobileDailyPercent">0%</span>
+                </div>
+            </div>
+        </section>
+
+        <!-- Section Classement -->
+        <section id="ranking" class="section">
+            <div class="section-header">
+                <h2>🏆 Classement VIP</h2>
+            </div>
+            <div class="ranking-list" id="mobileRankingList">
+                <div class="no-ranking">Chargement du classement...</div>
+            </div>
+        </section>
+
+        <!-- Section Chat VIP -->
+        <section id="chat" class="section">
+            <div class="section-header">
+                <h2>💬 Chat VIP</h2>
+            </div>
+            <div class="chat-container">
+                <div class="chat-messages" id="chatMessages"></div>
+                <div class="chat-input-container">
+                    <input type="text" id="chatInput" placeholder="Tapez votre message...">
+                    <button id="sendBtn">📤</button>
+                </div>
+            </div>
+        </section>
+
+        <!-- Section Paramètres -->
+        <section id="settings" class="section">
+            <div class="section-header">
+                <h2>⚙️ Paramètres</h2>
+            </div>
+            <div class="settings-container">
+                <!-- Gestion des comptes -->
+                <div class="settings-group">
+                    <h3>👤 Gestion des Comptes</h3>
+                    <div class="setting-item">
+                        <label>Compte actuel</label>
+                        <select id="mobileAccountSelect">
+                            <option value="default">Compte Principal</option>
+                        </select>
+                    </div>
+                    <div class="accounts-list" id="mobileAccountsList"></div>
+                    <button id="addMobileAccountBtn" class="btn-add">+ Ajouter un compte</button>
+                </div>
+                
+                <!-- Paramètres du compte -->
+                <div class="settings-group">
+                    <h3>💰 Paramètres du Compte</h3>
+                    <div class="setting-item">
+                        <label>Nom du compte</label>
+                        <input type="text" id="mobileAccountName" placeholder="Nom du compte">
+                    </div>
+                    <div class="setting-item">
+                        <label>Capital initial ($)</label>
+                        <input type="number" id="mobileCapitalInput" value="1000">
+                    </div>
+                    <div class="setting-item">
+                        <label>Objectif journalier ($)</label>
+                        <input type="number" id="mobileDailyGoal" value="10">
+                    </div>
+                    <div class="setting-item">
+                        <label>Objectif mensuel ($)</label>
+                        <input type="number" id="mobileMonthlyGoal" value="300">
+                    </div>
+                </div>
+                
+                <!-- Paramètres utilisateur -->
+                <div class="settings-group">
+                    <h3>🏷️ Profil Utilisateur</h3>
+                    <div class="setting-item">
+                        <label>Pseudo</label>
+                        <input type="text" id="mobileNickname" placeholder="Votre pseudo">
+                    </div>
+                </div>
+                
+                <!-- Paramètres notifications -->
+                <div class="settings-group">
+                    <h3>🔔 Notifications Chat</h3>
+                    <div class="setting-item">
+                        <label class="switch-label">
+                            <span>Sons</span>
+                            <label class="switch">
+                                <input type="checkbox" id="mobileSoundToggle" checked>
+                                <span class="slider"></span>
+                            </label>
+                        </label>
+                    </div>
+                    <div class="setting-item">
+                        <label class="switch-label">
+                            <span>Notifications Push</span>
+                            <label class="switch">
+                                <input type="checkbox" id="mobilePushToggle" checked>
+                                <span class="slider"></span>
+                            </label>
+                        </label>
+                    </div>
+                    <div class="setting-item">
+                        <label class="switch-label">
+                            <span>Vibrations</span>
+                            <label class="switch">
+                                <input type="checkbox" id="mobileVibrateToggle" checked>
+                                <span class="slider"></span>
+                            </label>
+                        </label>
+                    </div>
+                </div>
+                
+                <button id="saveSettingsBtn" class="primary-btn">💾 Sauvegarder</button>
+                <button id="deleteMobileAccountBtn" class="danger-btn" style="display:none;">🗑️ Supprimer ce compte</button>
+            </div>
+        </section>
+    </main>
+
+    <!-- Navigation Bottom -->
+    <nav class="bottom-nav">
+        <button class="nav-btn active" onclick="showMobileSection('dashboard')">
+            <span class="nav-icon">📊</span>
+            <span class="nav-label">Dashboard</span>
+        </button>
+        <button class="nav-btn" onclick="showMobileSection('trades')">
+            <span class="nav-icon">📈</span>
+            <span class="nav-label">Trades</span>
+        </button>
+        <button class="nav-btn" onclick="showMobileSection('calendar')">
+            <span class="nav-icon">📅</span>
+            <span class="nav-label">Calendrier</span>
+        </button>
+        <button class="nav-btn" onclick="showMobileSection('ranking')">
+            <span class="nav-icon">🏆</span>
+            <span class="nav-label">Classement</span>
+        </button>
+        <button class="nav-btn" onclick="showMobileSection('chat'); resetUnreadCount();">
+            <span class="nav-icon">💬</span>
+            <span class="nav-label">Chat</span>
+        </button>
+    </nav>
+
+    <!-- Widget Chat Flottant -->
+    <div class="chat-widget">
+        <button class="chat-toggle" id="chatToggle">💬</button>
+        <div id="chatBox" class="chat-box">
+            <div class="chat-header">
+                <span>💬 Chat VIP</span>
+                <button id="chatClose" class="chat-close">✕</button>
+            </div>
+            <div class="chat-messages" id="widgetMessages"></div>
+            <div class="chat-input">
+                <input type="text" id="widgetInput" placeholder="Message...">
+                <button id="widgetSend">📤</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal Trade -->
+    <div id="tradeModal" class="modal">
+        <div class="modal-content" id="modalContent"></div>
+    </div>
+
+    <script src="deploy-version.js"></script>
+    <script src="extension-errors-fix.js"></script>
+    <script src="vip-redirect-fix.js"></script>
+    <script src="mobile-errors-fix.js"></script>
+    <script src="nickname-sync-fix.js"></script>
+    <script src="popup-fix.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="mobile-trades.js"></script>
+    <script src="ranking-nickname-sync.js"></script>
+    <script src="force-iphone-banner.js"></script>
+    <script src="fix-nickname-mobile.js"></script>
+    <script src="fix-notifications-direct.js"></script>
+    <script src="mobile-functions-check.js"></script>
+    <script>
+        // Variables globales
+        let currentUser = null;
+        let mobilePerformanceChart = null;
+        let mobileWinRateChart = null;
+        
+        // Initialiser les graphiques mobiles
+        function initMobileCharts() {
+            const perfCtx = document.getElementById('mobilePerformanceChart');
+            const winCtx = document.getElementById('mobileWinRateChart');
+            
+            if (perfCtx) {
+                mobilePerformanceChart = new Chart(perfCtx, {
+                    type: 'line',
+                    data: {
+                        labels: ['T1', 'T2', 'T3', 'T4', 'T5'],
+                        datasets: [{
+                            label: 'P&L',
+                            data: [0, 0, 0, 0, 0],
+                            borderColor: '#00d4ff',
+                            backgroundColor: 'rgba(0, 212, 255, 0.1)',
+                            fill: true,
+                            tension: 0.4
+                        }]
+                    },
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        plugins: { legend: { display: false } }
+                    }
+                });
+            }
+            
+            if (winCtx) {
+                mobileWinRateChart = new Chart(winCtx, {
+                    type: 'doughnut',
+                    data: {
+                        labels: ['Gagnants', 'Perdants'],
+                        datasets: [{
+                            data: [0, 0],
+                            backgroundColor: ['#28a745', '#dc3545']
+                        }]
+                    },
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false
+                    }
+                });
+            }
+        }
+        
+        // Mettre à jour les graphiques
+        function updateMobileCharts() {
+            if (!window.mobileTradesData) return;
+            
+            const trades = window.mobileTradesData;
+            const closedTrades = trades.filter(t => t.status === 'closed');
+            const winTrades = closedTrades.filter(t => t.pnl > 0);
+            const lossTrades = closedTrades.filter(t => t.pnl <= 0);
+            
+            // Performance chart
+            if (mobilePerformanceChart && closedTrades.length > 0) {
+                const pnlData = [];
+                let cumulative = 0;
+                closedTrades.forEach(trade => {
+                    cumulative += trade.pnl || 0;
+                    pnlData.push(cumulative);
+                });
+                
+                mobilePerformanceChart.data.labels = closedTrades.map((_, i) => `T${i+1}`);
+                mobilePerformanceChart.data.datasets[0].data = pnlData;
+                mobilePerformanceChart.update();
+            }
+            
+            // WinRate chart
+            if (mobileWinRateChart && closedTrades.length > 0) {
+                mobileWinRateChart.data.datasets[0].data = [winTrades.length, lossTrades.length];
+                mobileWinRateChart.update();
+            }
+        }
+        
+        // Navigation mobile
+        document.addEventListener('DOMContentLoaded', function() {
+            const menuToggle = document.getElementById('menuToggle');
+            const mobileMenu = document.getElementById('mobileMenu');
+            const menuOverlay = document.getElementById('menuOverlay');
+            const closeMenu = document.getElementById('closeMenu');
+            const menuLinks = document.querySelectorAll('.menu-list a[data-section]');
+            const navBtns = document.querySelectorAll('.nav-btn[data-section]');
+            
+            // Menu hamburger
+            menuToggle.addEventListener('click', () => {
+                mobileMenu.classList.add('active');
+                menuOverlay.classList.add('active');
+            });
+            
+            function closeMenuFunc() {
+                mobileMenu.classList.remove('active');
+                menuOverlay.classList.remove('active');
+            }
+            
+            closeMenu.addEventListener('click', closeMenuFunc);
+            menuOverlay.addEventListener('click', closeMenuFunc);
+            
+            // Navigation sections
+            function showSection(sectionId) {
+                document.querySelectorAll('.section').forEach(section => {
+                    section.classList.remove('active');
+                });
+                document.getElementById(sectionId).classList.add('active');
+                
+                // Mettre à jour navigation bottom
+                navBtns.forEach(btn => btn.classList.remove('active'));
+                document.querySelector(`[data-section="${sectionId}"]`).classList.add('active');
+                
+                closeMenuFunc();
+            }
+            
+            // Événements navigation
+            menuLinks.forEach(link => {
+                link.addEventListener('click', (e) => {
+                    e.preventDefault();
+                    showSection(link.getAttribute('data-section'));
+                });
+            });
+            
+            navBtns.forEach(btn => {
+                btn.addEventListener('click', () => {
+                    showSection(btn.getAttribute('data-section'));
+                });
+            });
+            
+            // Chat widget
+            const chatToggle = document.getElementById('chatToggle');
+            const chatBox = document.getElementById('chatBox');
+            const chatClose = document.getElementById('chatClose');
+            
+            chatToggle.addEventListener('click', () => {
+                chatBox.classList.toggle('active');
+                if (chatBox.classList.contains('active') && window.resetUnreadCount) {
+                    window.resetUnreadCount();
+                }
+            });
+            
+            chatClose.addEventListener('click', () => {
+                chatBox.classList.remove('active');
+            });
+            
+            // Chat VIP
+            const sendBtn = document.getElementById('sendBtn');
+            const chatInput = document.getElementById('chatInput');
+            
+            window.sendWidgetMessage = async function() {
+                const input = document.getElementById('widgetInput');
+                const message = input.value.trim();
+                if (!message) return;
+                
+                const uid = sessionStorage.getItem('firebaseUID');
+                let nickname = sessionStorage.getItem('userNickname') || 'Mobile User';
+                
+                const messageData = {
+                    id: `msg_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
+                    userId: uid,
+                    nickname: nickname,
+                    message: message,
+                    timestamp: Date.now(),
+                    type: 'text'
+                };
+                
+                try {
+                    const { ref, push } = await import('https://www.gstatic.com/firebasejs/10.7.0/firebase-database.js');
+                    const messagesRef = ref(window.firebaseDB, 'vip_chat');
+                    await push(messagesRef, messageData);
+                    input.value = '';
+                } catch (error) {
+                    console.error('Erreur widget message:', error);
+                }
+            }
+            
+            if (sendBtn) sendBtn.onclick = sendMessage;
+            if (chatInput) {
+                chatInput.addEventListener('keypress', (e) => {
+                    if (e.key === 'Enter') sendMessage();
+                });
+            }
+            
+            // Initialiser les graphiques
+            setTimeout(initMobileCharts, 1000);
+            
+            // Exposer la fonction de mise à jour
+            window.updateMobileCharts = updateMobileCharts;
+            
+            // Charger chat widget
+            async function loadWidgetChat() {
+                if (!window.firebaseDB) return;
+                
+                const { ref, onValue } = await import('https://www.gstatic.com/firebasejs/10.7.0/firebase-database.js');
+                const chatRef = ref(window.firebaseDB, 'vip_chat');
+                onValue(chatRef, (snapshot) => {
+                    const container = document.getElementById('widgetMessages');
+                    if (!container) return;
+                    
+                    container.innerHTML = '';
+                    
+                    if (snapshot.exists()) {
+                        const messages = Object.values(snapshot.val())
+                            .sort((a, b) => a.timestamp - b.timestamp)
+                            .slice(-20);
+                        
+                        messages.forEach(msg => {
+                            const div = document.createElement('div');
+                            const isOwn = msg.userId === sessionStorage.getItem('firebaseUID');
+                            div.className = `message ${isOwn ? 'sent' : 'received'}`;
+                            div.innerHTML = `
+                                <div class="message-content">
+                                    <div class="message-text">${msg.message}</div>
+                                    <div class="message-info">
+                                        <span class="message-sender">${msg.nickname}</span>
+                                        <span class="message-time">${new Date(msg.timestamp).toLocaleTimeString()}</span>
+                                    </div>
+                                </div>
+                            `;
+                            container.appendChild(div);
+                        });
+                        
+                        container.scrollTop = container.scrollHeight;
+                    } else {
+                        container.innerHTML = '<div class="no-messages">💬 Aucun message</div>';
+                    }
+                });
+            }
+            
+            // Bouton notifications direct
+            const notifBtn = document.getElementById('activateNotifBtn');
+            if (notifBtn) {
+                notifBtn.onclick = async () => {
+                    if ('Notification' in window) {
+                        const permission = await Notification.requestPermission();
+                        if (permission === 'granted') {
+                            new Notification('✅ Notifications activées !', {
+                                body: 'Vous recevrez les messages du chat VIP',
+                                icon: './Misterpips.jpg'
+                            });
+                            notifBtn.textContent = '✅ OK';
+                            notifBtn.style.background = '#28a745';
+                        }
+                    }
+                };
+            }
+            
+            // Initialiser après Firebase
+            setTimeout(() => {
+                loadWidgetChat();
+                loadMobileChat();
+                if (window.loadMobileData) window.loadMobileData();
+                if (window.loadMobileRanking) window.loadMobileRanking();
+                
+                // Reset notifications quand on ouvre le chat
+                const chatSection = document.getElementById('chat');
+                if (chatSection) {
+                    const observer = new MutationObserver((mutations) => {
+                        mutations.forEach((mutation) => {
+                            if (mutation.target.classList.contains('active') && window.resetUnreadCount) {
+                                window.resetUnreadCount();
+                            }
+                        });
+                    });
+                    observer.observe(chatSection, { attributes: true, attributeFilter: ['class'] });
+                }
+                
+                // Écouter messages du Service Worker
+                if ('serviceWorker' in navigator) {
+                    navigator.serviceWorker.addEventListener('message', (event) => {
+                        if (event.data && event.data.type === 'OPEN_CHAT') {
+                            showMobileSection('chat');
+                            if (window.resetUnreadCount) window.resetUnreadCount();
+                        }
+                    });
+                }
+            }, 3000);
+        });
+        
+        // Chat mobile simple
+        async function sendMessage() {
+            const input = document.getElementById('chatInput');
+            const message = input.value.trim();
+            if (!message) return;
+            
+            if (!window.firebaseDB) {
+                console.error('Firebase non prêt');
+                return;
+            }
+            
+            const uid = sessionStorage.getItem('firebaseUID');
+            let nickname = sessionStorage.getItem('userNickname') || 'Mobile User';
+            
+            const messageData = {
+                id: `msg_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
+                userId: uid,
+                nickname: nickname,
+                message: message,
+                timestamp: Date.now(),
+                type: 'text'
+            };
+            
+            input.value = '';
+            console.log('📤 Envoi message mobile:', messageData);
+            
+            try {
+                if (window.firebaseDB) {
+                    // Méthode compatible PC (import dynamique)
+                    const { ref, push } = await import('https://www.gstatic.com/firebasejs/10.7.0/firebase-database.js');
+                    const messagesRef = ref(window.firebaseDB, 'vip_chat');
+                    await push(messagesRef, messageData);
+                    console.log('✅ Message envoyé avec succès');
+                } else {
+                    throw new Error('Firebase non initialisé');
+                }
+            } catch (error) {
+                console.error('❌ Erreur envoi:', error);
+            }
+        }
+        
+        // Afficher message mobile
+        function addMobileMessageToUI(messageData, isOwn) {
+            const container = document.getElementById('chatMessages');
+            if (!container) return;
+            
+            const messageDiv = document.createElement('div');
+            messageDiv.className = `message ${isOwn ? 'sent' : 'received'}`;
+            messageDiv.innerHTML = `
+                <div class="message-content">
+                    <div class="message-text">${messageData.message}</div>
+                    <div class="message-info">
+                        <span class="message-sender">${messageData.nickname}</span>
+                        <span class="message-time">${new Date(messageData.timestamp).toLocaleTimeString()}</span>
+                    </div>
+                </div>
+            `;
+            
+            container.appendChild(messageDiv);
+            container.scrollTop = container.scrollHeight;
+        }
+        
+        // Notifications gérées par mobile-notifications.js
+        
+        // Écouter les messages
+        async function loadMobileChat() {
+            if (!window.firebaseDB) return;
+            
+            const { ref, onValue } = await import('https://www.gstatic.com/firebasejs/10.7.0/firebase-database.js');
+            const messagesRef = ref(window.firebaseDB, 'vip_chat');
+            onValue(messagesRef, (snapshot) => {
+                const container = document.getElementById('chatMessages');
+                if (!container) return;
+                
+                container.innerHTML = '';
+                
+                if (snapshot.exists()) {
+                    const messages = Object.values(snapshot.val())
+                        .sort((a, b) => a.timestamp - b.timestamp)
+                        .slice(-50);
+                    
+                    messages.forEach(msg => {
+                        const messageDiv = document.createElement('div');
+                        const isOwn = msg.userId === sessionStorage.getItem('firebaseUID');
+                        messageDiv.className = `message ${isOwn ? 'sent' : 'received'}`;
+                        messageDiv.innerHTML = `
+                            <div class="message-content">
+                                <div class="message-text">${msg.message}</div>
+                                <div class="message-info">
+                                    <span class="message-sender">${msg.nickname}</span>
+                                    <span class="message-time">${new Date(msg.timestamp).toLocaleTimeString()}</span>
+                                </div>
+                            </div>
+                        `;
+                        container.appendChild(messageDiv);
+                    });
+                    
+                    container.scrollTop = container.scrollHeight;
+                } else {
+                    container.innerHTML = '<div class="no-messages">💬 Aucun message</div>';
+                }
+            });
+        }
+        
+        // Reset compteur messages (géré par mobile-notifications.js)
+        function resetChatNotifications() {
+            if (window.resetSimpleBadge) {
+                window.resetSimpleBadge();
+            }
+        }
+        
+        function updateMobileCalendar() {
+            const calendar = document.getElementById('mobileCalendar');
+            if (!calendar) return;
+            
+            const today = new Date();
+            const month = today.getMonth();
+            const year = today.getFullYear();
+            const daysInMonth = new Date(year, month + 1, 0).getDate();
+            
+            // Récupérer les trades de toutes les sources possibles
+            let trades = [];
+            
+            // Essayer différentes sources de données
+            const sources = [
+                localStorage.getItem('trades'),
+                localStorage.getItem(`trades_${currentMobileAccount}`),
+                localStorage.getItem('mobileTradesData'),
+                sessionStorage.getItem('trades')
+            ];
+            
+            for (const source of sources) {
+                if (source) {
+                    try {
+                        const data = JSON.parse(source);
+                        if (Array.isArray(data) && data.length > 0) {
+                            trades = data;
+                            break;
+                        }
+                    } catch (e) {}
+                }
+            }
+            
+            // Si window.mobileTradesData existe, l'utiliser
+            if (window.mobileTradesData && Array.isArray(window.mobileTradesData)) {
+                trades = window.mobileTradesData;
+            }
+            
+            const tradesData = {};
+            
+            trades.forEach(trade => {
+                let tradeDate;
+                
+                // Essayer différents formats de date
+                if (trade.date) {
+                    tradeDate = new Date(trade.date);
+                } else if (trade.timestamp) {
+                    tradeDate = new Date(trade.timestamp);
+                } else if (trade.createdAt) {
+                    tradeDate = new Date(trade.createdAt);
+                }
+                
+                if (tradeDate && !isNaN(tradeDate.getTime())) {
+                    if (tradeDate.getMonth() === month && tradeDate.getFullYear() === year) {
+                        const day = tradeDate.getDate();
+                        if (!tradesData[day]) tradesData[day] = { count: 0, pnl: 0 };
+                        tradesData[day].count++;
+                        
+                        // Calculer P&L selon le statut
+                        let pnl = 0;
+                        if (trade.status === 'closed' || trade.status === 'tp' || trade.status === 'sl') {
+                            pnl = parseFloat(trade.pnl) || parseFloat(trade.profit) || 0;
+                        }
+                        tradesData[day].pnl += pnl;
+                    }
+                }
+            });
+            
+            let html = '<div class="calendar-grid">';
+            
+            // Jours de la semaine
+            ['D', 'L', 'M', 'M', 'J', 'V', 'S'].forEach(day => {
+                html += `<div class="calendar-day-header">${day}</div>`;
+            });
+            
+            // Jours du mois
+            for (let day = 1; day <= daysInMonth; day++) {
+                const dayData = tradesData[day];
+                const hasData = dayData && dayData.count > 0;
+                const pnlClass = hasData ? (dayData.pnl > 0 ? 'profit-day' : 'loss-day') : '';
+                
+                html += `<div class="calendar-day ${pnlClass}">`;
+                html += `<div class="calendar-date">${day}</div>`;
+                if (hasData) {
+                    html += `<div class="calendar-trades">${dayData.count}T</div>`;
+                    html += `<div class="calendar-pnl ${dayData.pnl > 0 ? 'positive' : 'negative'}">$${dayData.pnl.toFixed(0)}</div>`;
+                }
+                html += '</div>';
+            }
+            
+            html += '</div>';
+            calendar.innerHTML = html;
+        }
+        
+        // Système unifié de gestion des pseudos (compatible PC/Mobile)
+        class MobileNicknameManager {
+            constructor() {
+                this.currentUser = null;
+                this.nickname = null;
+            }
+
+            async initialize() {
+                const uid = sessionStorage.getItem('firebaseUID');
+                if (!uid || !window.firebaseDB) return null;
+                
+                this.currentUser = { uid };
+                await this.loadNickname();
+                return this.nickname;
+            }
+
+            async loadNickname() {
+                if (!this.currentUser || !window.firebaseDB) return null;
+                
+                try {
+                    const { ref, get } = await import('https://www.gstatic.com/firebasejs/10.7.0/firebase-database.js');
+                    const nicknameRef = ref(window.firebaseDB, `users/${this.currentUser.uid}/nickname`);
+                    const snapshot = await get(nicknameRef);
+                    
+                    if (snapshot.exists()) {
+                        this.nickname = snapshot.val();
+                        sessionStorage.setItem('userNickname', this.nickname);
+                        
+                        const nicknameInput = document.getElementById('mobileNickname');
+                        if (nicknameInput) nicknameInput.value = this.nickname;
+                        
+                        console.log('✅ Pseudo chargé:', this.nickname);
+                    } else {
+                        console.log('📝 Aucun pseudo sauvegardé');
+                    }
+                    
+                    return this.nickname;
+                } catch (error) {
+                    console.error('Erreur chargement pseudo:', error);
+                    return null;
+                }
+            }
+
+            async saveNickname(nickname) {
+                if (!this.currentUser || !nickname || !window.firebaseDB) return false;
+                
+                try {
+                    const { ref, set } = await import('https://www.gstatic.com/firebasejs/10.7.0/firebase-database.js');
+                    const nicknameRef = ref(window.firebaseDB, `users/${this.currentUser.uid}/nickname`);
+                    await set(nicknameRef, nickname);
+                    
+                    this.nickname = nickname;
+                    sessionStorage.setItem('userNickname', nickname);
+                    
+                    const nicknameInput = document.getElementById('mobileNickname');
+                    if (nicknameInput) nicknameInput.value = nickname;
+                    
+                    return true;
+                } catch (error) {
+                    console.error('Erreur sauvegarde pseudo:', error);
+                    return false;
+                }
+            }
+
+            getNickname() {
+                return this.nickname || sessionStorage.getItem('userNickname');
+            }
+        }
+
+        // Instance globale mobile
+        window.mobileNicknameManager = new MobileNicknameManager();
+        
+        // Fonction sauvegarde pseudo supprimée - gérée par mobile-fix-simple.js
+        
+        // Fonctions pseudo supprimées - gérées par mobile-fix-simple.js
+        
+        // Menu mobile
+        function openMobileMenu() {
+            document.getElementById('mobileMenu').classList.add('active');
+            document.getElementById('menuOverlay').classList.add('active');
+        }
+        
+        function closeMobileMenu() {
+            document.getElementById('mobileMenu').classList.remove('active');
+            document.getElementById('menuOverlay').classList.remove('active');
+        }
+        
+        function showMobileSection(sectionId) {
+            document.querySelectorAll('.section').forEach(s => s.classList.remove('active'));
+            document.getElementById(sectionId).classList.add('active');
+            document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active'));
+            if (event && event.target) {
+                const btn = event.target.closest('.nav-btn');
+                if (btn) btn.classList.add('active');
+            }
+            if (sectionId === 'chat' && window.resetSimpleBadge) {
+                window.resetSimpleBadge();
+            }
+            closeMobileMenu();
+        }
+        
+        function toggleChat() {
+            document.getElementById('chatBox').classList.toggle('active');
+        }
+        
+        // Initialisation
+        document.addEventListener('DOMContentLoaded', () => {
+            updateMobileCalendar();
+            
+            setTimeout(() => {
+                const chatInput = document.getElementById('chatInput');
+                const sendBtn = document.getElementById('sendBtn');
+                const saveBtn = document.getElementById('saveSettingsBtn');
+                
+                if (chatInput) {
+                    chatInput.onkeypress = (e) => {
+                        if (e.key === 'Enter') sendMessage();
+                    };
+                }
+                
+                if (sendBtn) {
+                    sendBtn.onclick = sendMessage;
+                }
+                
+                if (saveBtn && !saveBtn.hasAttribute('data-initialized')) {
+                    saveBtn.setAttribute('data-initialized', 'true');
+                    saveBtn.addEventListener('click', (e) => {
+                        e.preventDefault();
+                        e.stopPropagation();
+                        if (window.forceSaveNickname) {
+                            window.forceSaveNickname();
+                        } else {
+                            const input = document.getElementById('mobileNickname');
+                            if (input && input.value.trim()) {
+                                const nickname = input.value.trim();
+                                localStorage.setItem('NICKNAME_FORCE', nickname);
+                                sessionStorage.setItem('userNickname', nickname);
+                                alert('✅ Pseudo sauvegardé !');
+                            }
+                        }
+                        saveMobileAccountSettings();
+                    });
+                }
+                
+                // Gestion des comptes
+                const headerAccountSelect = document.getElementById('headerAccountSelect');
+                const settingsAccountSelect = document.getElementById('mobileAccountSelect');
+                const addAccountBtn = document.getElementById('addMobileAccountBtn');
+                const deleteAccountBtn = document.getElementById('deleteMobileAccountBtn');
+                
+                if (headerAccountSelect && !headerAccountSelect.hasAttribute('data-initialized')) {
+                    headerAccountSelect.setAttribute('data-initialized', 'true');
+                    headerAccountSelect.addEventListener('change', (e) => {
+                        e.preventDefault();
+                        e.stopPropagation();
+                        switchMobileAccount(e.target.value);
+                    });
+                }
+                
+                if (settingsAccountSelect && !settingsAccountSelect.hasAttribute('data-initialized')) {
+                    settingsAccountSelect.setAttribute('data-initialized', 'true');
+                    settingsAccountSelect.addEventListener('change', (e) => {
+                        e.preventDefault();
+                        e.stopPropagation();
+                        switchMobileAccount(e.target.value);
+                    });
+                }
+                
+                if (addAccountBtn) {
+                    addAccountBtn.addEventListener('click', addMobileAccount);
+                }
+                
+                if (deleteAccountBtn) {
+                    deleteAccountBtn.addEventListener('click', () => {
+                        deleteMobileAccount(currentMobileAccount);
+                    });
+                }
+                
+                // Charger les comptes
+                loadMobileAccounts();
+                
+                const widgetSend = document.getElementById('widgetSend');
+                const widgetInput = document.getElementById('widgetInput');
+                
+                if (widgetSend) {
+                    widgetSend.addEventListener('click', () => {
+                        if (window.sendWidgetMessage) {
+                            window.sendWidgetMessage();
+                        }
+                    });
+                }
+                
+                if (widgetInput) {
+                    widgetInput.addEventListener('keypress', (e) => {
+                        if (e.key === 'Enter') {
+                            e.preventDefault();
+                            sendWidgetMessage();
+                        }
+                    });
+                }
+                
+                // Pseudo géré par mobile-fix-simple.js
+                loadMobileChat();
+                
+                // Initialiser le gestionnaire de pseudo unifié
+                setTimeout(() => {
+                    if (window.unifiedNicknameSync) {
+                        window.unifiedNicknameSync.initialize();
+                    }
+                    
+                    // Fix chat - initialiser l'écoute des messages
+                    if (window.firebaseDB && !window.chatInitialized) {
+                        loadMobileChat();
+                        window.chatInitialized = true;
+                    }
+                }, 2000);
+            }, 1000);
+        });
+        
+        // Gestion des comptes mobiles
+        let mobileAccounts = JSON.parse(localStorage.getItem('mobileAccounts')) || { default: { name: 'Compte Principal', capital: 1000, dailyGoal: 10, monthlyGoal: 300 } };
+        let currentMobileAccount = localStorage.getItem('currentMobileAccount') || 'default';
+        
+        function loadMobileAccounts() {
+            const headerSelect = document.getElementById('headerAccountSelect');
+            const settingsSelect = document.getElementById('mobileAccountSelect');
+            const accountsList = document.getElementById('mobileAccountsList');
+            
+            if (headerSelect) {
+                headerSelect.innerHTML = '';
+                Object.keys(mobileAccounts).forEach(id => {
+                    const option = document.createElement('option');
+                    option.value = id;
+                    option.textContent = mobileAccounts[id].name;
+                    if (id === currentMobileAccount) option.selected = true;
+                    headerSelect.appendChild(option);
+                });
+            }
+            
+            if (settingsSelect) {
+                settingsSelect.innerHTML = '';
+                Object.keys(mobileAccounts).forEach(id => {
+                    const option = document.createElement('option');
+                    option.value = id;
+                    option.textContent = mobileAccounts[id].name;
+                    if (id === currentMobileAccount) option.selected = true;
+                    settingsSelect.appendChild(option);
+                });
+            }
+            
+            if (accountsList) {
+                accountsList.innerHTML = '';
+                Object.keys(mobileAccounts).forEach(id => {
+                    const account = mobileAccounts[id];
+                    const div = document.createElement('div');
+                    div.className = 'account-item';
+                    div.innerHTML = `
+                        <div class="account-info">
+                            <div class="account-name">${account.name}</div>
+                            <div class="account-capital">Capital: $${account.capital}</div>
+                        </div>
+                        <div class="account-actions">
+                            <button class="btn-edit" onclick="editMobileAccount('${id}')">✏️</button>
+                            ${id !== 'default' ? `<button class="btn-delete-account" onclick="deleteMobileAccount('${id}')">🗑️</button>` : ''}
+                        </div>
+                    `;
+                    accountsList.appendChild(div);
+                });
+            }
+            
+            loadCurrentMobileAccount();
+        }
+        
+        function loadCurrentMobileAccount() {
+            const account = mobileAccounts[currentMobileAccount];
+            if (!account) return;
+            
+            document.getElementById('mobileAccountName').value = account.name;
+            document.getElementById('mobileCapitalInput').value = account.capital;
+            document.getElementById('mobileDailyGoal').value = account.dailyGoal;
+            document.getElementById('mobileMonthlyGoal').value = account.monthlyGoal;
+            
+            document.getElementById('mobileCapital').textContent = `$${account.capital}`;
+            
+            const deleteBtn = document.getElementById('deleteMobileAccountBtn');
+            if (deleteBtn) {
+                deleteBtn.style.display = currentMobileAccount === 'default' ? 'none' : 'block';
+            }
+        }
+        
+        function switchMobileAccount(accountId) {
+            // Éviter les doubles changements
+            if (window.switchingAccount || currentMobileAccount === accountId) return;
+            window.switchingAccount = true;
+            
+            currentMobileAccount = accountId;
+            localStorage.setItem('currentMobileAccount', accountId);
+            loadCurrentMobileAccount();
+            if (window.loadMobileData) window.loadMobileData();
+            
+            setTimeout(() => {
+                window.switchingAccount = false;
+            }, 500);
+        }
+        
+        function addMobileAccount() {
+            const name = prompt('Nom du nouveau compte:', 'Nouveau Compte');
+            if (!name) return;
+            
+            const id = 'acc_' + Date.now();
+            mobileAccounts[id] = {
+                name: name,
+                capital: 1000,
+                dailyGoal: 10,
+                monthlyGoal: 300
+            };
+            
+            localStorage.setItem('mobileAccounts', JSON.stringify(mobileAccounts));
+            loadMobileAccounts();
+        }
+        
+        function editMobileAccount(accountId) {
+            currentMobileAccount = accountId;
+            localStorage.setItem('currentMobileAccount', accountId);
+            loadMobileAccounts();
+        }
+        
+        function deleteMobileAccount(accountId) {
+            if (accountId === 'default') return;
+            if (!confirm('Supprimer ce compte ?')) return;
+            
+            delete mobileAccounts[accountId];
+            if (currentMobileAccount === accountId) {
+                currentMobileAccount = 'default';
+                localStorage.setItem('currentMobileAccount', 'default');
+            }
+            
+            localStorage.setItem('mobileAccounts', JSON.stringify(mobileAccounts));
+            loadMobileAccounts();
+        }
+        
+        function saveMobileAccountSettings() {
+            const account = mobileAccounts[currentMobileAccount];
+            if (!account) return;
+            
+            account.name = document.getElementById('mobileAccountName').value;
+            account.capital = parseFloat(document.getElementById('mobileCapitalInput').value) || 1000;
+            account.dailyGoal = parseFloat(document.getElementById('mobileDailyGoal').value) || 10;
+            account.monthlyGoal = parseFloat(document.getElementById('mobileMonthlyGoal').value) || 300;
+            
+            localStorage.setItem('mobileAccounts', JSON.stringify(mobileAccounts));
+            loadMobileAccounts();
+        }
+        
+        // Fonctions globales
+        window.sendMessage = sendMessage;
+        window.sendWidgetMessage = sendWidgetMessage;
+        window.addMobileAccount = addMobileAccount;
+        window.editMobileAccount = editMobileAccount;
+        window.deleteMobileAccount = deleteMobileAccount;
+        window.switchMobileAccount = switchMobileAccount;
+    </script>
+</body>
+</html>

@@ -1,0 +1,78 @@
+{
+  "name": "Misterpips - Trading Professionnel",
+  "short_name": "Misterpips",
+  "description": "Application de trading professionnelle avec dashboard, analyses et outils VIP",
+  "version": "2.0.0",
+  "start_url": "/mobile-dashboard.html",
+  "display": "standalone",
+  "orientation": "portrait-primary",
+  "theme_color": "#00d4ff",
+  "background_color": "#1a1a2e",
+  "lang": "fr",
+  "scope": "/",
+  "icons": [
+    {
+      "src": "Misterpips.jpg",
+      "sizes": "192x192",
+      "type": "image/jpeg",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "Misterpips.jpg",
+      "sizes": "512x512",
+      "type": "image/jpeg",
+      "purpose": "any maskable"
+    }
+  ],
+  "categories": ["finance", "business", "productivity"],
+  "screenshots": [
+    {
+      "src": "Misterpips.jpg",
+      "sizes": "1280x720",
+      "type": "image/jpeg",
+      "form_factor": "wide"
+    },
+    {
+      "src": "Misterpips.jpg",
+      "sizes": "750x1334",
+      "type": "image/jpeg",
+      "form_factor": "narrow"
+    }
+  ],
+  "shortcuts": [
+    {
+      "name": "Chat VIP",
+      "short_name": "Chat",
+      "description": "Accéder au chat VIP",
+      "url": "/mobile-dashboard.html#chat",
+      "icons": [
+        {
+          "src": "Misterpips.jpg",
+          "sizes": "96x96"
+        }
+      ]
+    },
+    {
+      "name": "Mes Trades",
+      "short_name": "Trades",
+      "description": "Gérer mes trades",
+      "url": "/mobile-dashboard.html#trades",
+      "icons": [
+        {
+          "src": "Misterpips.jpg",
+          "sizes": "96x96"
+        }
+      ]
+    }
+  ],
+  "prefer_related_applications": false,
+  "related_applications": [],
+  "protocol_handlers": [],
+  "edge_side_panel": {},
+  "dir": "ltr",
+  "serviceworker": {
+    "src": "sw.js",
+    "scope": "/",
+    "update_via_cache": "imports"
+  }
+}

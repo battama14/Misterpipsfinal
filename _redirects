@@ -1,0 +1,27 @@
+# Redirections Netlify pour Misterpips
+
+# Redirection mobile automatique
+/mobile  /mobile-dashboard.html  200
+/m       /mobile-dashboard.html  200
+
+# Redirection dashboard
+/dashboard  /dashboard.html  200
+/pc         /dashboard.html  200
+
+# Redirection VIP
+/vip        /vip-space.html  200
+/space      /vip-space.html  200
+
+# Redirection admin
+/admin      /admin-dashboard.html  200
+
+# Redirection planning
+/planning   /planning-forex.html  200
+/forex      /planning-forex.html  200
+
+# Tests
+/test       /netlify-deploy-check.html  200
+/check      /netlify-deploy-check.html  200
+
+# Fallback pour SPA
+/*  /index.html  200
