@@ -25,11 +25,14 @@ async function initChatNotifications() {
             const newMessages = messages.filter(msg => 
                 msg.timestamp > lastMessageTime &&
                 msg.userId !== myUID &&
-                msg.timestamp > (Date.now() - 60000) // 1 minute max
+                msg.timestamp > (Date.now() - 120000) && // 2 minutes max
+                msg.message && msg.nickname // Vérifier que le message est valide
             );
             
             if (newMessages.length > 0) {
+                console.log(`🔔 ${newMessages.length} nouveaux messages détectés`);
                 newMessages.forEach(msg => {
+                    console.log('💬 Nouveau message de:', msg.nickname, '|', msg.message.substring(0, 50));
                     showChatNotification(msg);
                     incrementBadge();
                 });
@@ -42,50 +45,116 @@ async function initChatNotifications() {
     }
 }
 
+// Récupérer paramètres notifications
+function getNotificationSettings() {
+    try {
+        const settings = JSON.parse(localStorage.getItem('mobileNotificationSettings')) || { sound: true, push: true, vibrate: true };
+        return settings;
+    } catch (e) {
+        return { sound: true, push: true, vibrate: true };
+    }
+}
+
 // Afficher notification
 function showChatNotification(message) {
-    // Vérifier permissions
-    if (Notification.permission !== 'granted') return;
-    
-    // Ne pas notifier si l'app est active et sur le chat
-    if (document.hasFocus() && isOnChatSection()) return;
-    
-    console.log('🔔 Notification:', message.nickname);
-    
-    const notification = new Notification(`💬 ${message.nickname}`, {
-        body: message.message.substring(0, 100),
-        icon: './Misterpips.jpg',
-        badge: './Misterpips.jpg',
-        tag: 'misterpips-chat',
-        requireInteraction: false,
-        silent: false
-    });
-    
-    // Vibration mobile
-    if ('vibrate' in navigator) {
-        navigator.vibrate([300, 100, 300]);
+    const settings = getNotificationSettings();
+
+    // Vérifier permissions et préférences push
+    if (Notification.permission !== 'granted' || !settings.push) {
+        console.log('❌ Permissions notifications refusées ou désactivées');
+        return;
     }
-    
-    // Clic pour ouvrir
-    notification.onclick = () => {
-        window.focus();
-        
-        if (window.showMobileSection) {
-            window.showMobileSection('chat');
+
+    // Ne pas notifier si l'app est active et sur le chat
+    if (document.hasFocus() && isOnChatSection()) {
+        console.log('🔕 Pas de notification - sur le chat');
+        return;
+    }
+
+    console.log('🔔 Affichage notification:', message.nickname, message.message);
+
+    try {
+        const notification = new Notification(`💬 ${message.nickname}`, {
+            body: message.message.substring(0, 100),
+            icon: './Misterpips.jpg',
+            badge: './Misterpips.jpg',
+            tag: 'misterpips-chat-' + Date.now(),
+            requireInteraction: true,
+            silent: !settings.sound, // Désactiver le son par défaut si paramétré
+            vibrate: settings.vibrate ? [300, 100, 300] : [],
+            actions: [
+                {
+                    action: 'open',
+                    title: 'Ouvrir Chat'
+                }
+            ]
+        });
+
+        // Son personnalisé selon les préférences
+        if (settings.sound) {
+            playNotificationSound();
         }
-        
-        resetBadge();
-        notification.close();
-    };
-    
-    // Auto-fermer après 8 secondes
-    setTimeout(() => notification.close(), 8000);
+
+        // Vibration mobile selon les préférences
+        if (settings.vibrate && 'vibrate' in navigator) {
+            navigator.vibrate([300, 100, 300]);
+        }
+
+        // Clic pour ouvrir
+        notification.onclick = () => {
+            console.log('🔔 Clic notification');
+            window.focus();
+
+            if (window.showMobileSection) {
+                window.showMobileSection('chat');
+            }
+
+            resetBadge();
+            notification.close();
+        };
+
+        // Auto-fermer après 10 secondes
+        setTimeout(() => {
+            try {
+                notification.close();
+            } catch (e) {}
+        }, 10000);
+
+    } catch (error) {
+        console.error('❌ Erreur création notification:', error);
+    }
 }
 
 // Vérifier si on est sur le chat
 function isOnChatSection() {
     const chatSection = document.getElementById('chat');
     return chatSection && chatSection.classList.contains('active');
+}
+
+// Jouer son de notification
+function playNotificationSound() {
+    try {
+        // Créer un son simple
+        const audioContext = new (window.AudioContext || window.webkitAudioContext)();
+        const oscillator = audioContext.createOscillator();
+        const gainNode = audioContext.createGain();
+        
+        oscillator.connect(gainNode);
+        gainNode.connect(audioContext.destination);
+        
+        oscillator.frequency.setValueAtTime(800, audioContext.currentTime);
+        oscillator.frequency.setValueAtTime(600, audioContext.currentTime + 0.1);
+        
+        gainNode.gain.setValueAtTime(0.3, audioContext.currentTime);
+        gainNode.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + 0.5);
+        
+        oscillator.start(audioContext.currentTime);
+        oscillator.stop(audioContext.currentTime + 0.5);
+        
+        console.log('🔊 Son notification joué');
+    } catch (error) {
+        console.log('❌ Erreur son:', error);
+    }
 }
 
 // Incrémenter badge

@@ -608,23 +608,51 @@
         
         // Notifications gérées par mobile-notifications.js
         
+        // Variables pour les notifications
+        let lastMessageTimestamp = Date.now();
+        let messageCount = 0;
+
         // Écouter les messages
         async function loadMobileChat() {
             if (!window.firebaseDB) return;
-            
+
             const { ref, onValue } = await import('https://www.gstatic.com/firebasejs/10.7.0/firebase-database.js');
             const messagesRef = ref(window.firebaseDB, 'vip_chat');
             onValue(messagesRef, (snapshot) => {
                 const container = document.getElementById('chatMessages');
                 if (!container) return;
-                
+
                 container.innerHTML = '';
-                
+
                 if (snapshot.exists()) {
                     const messages = Object.values(snapshot.val())
                         .sort((a, b) => a.timestamp - b.timestamp)
                         .slice(-50);
-                    
+
+                    // Vérifier les nouveaux messages pour les notifications
+                    const myUID = sessionStorage.getItem('firebaseUID');
+                    const newMessages = messages.filter(msg =>
+                        msg.timestamp > lastMessageTimestamp &&
+                        msg.userId !== myUID &&
+                        msg.timestamp > (Date.now() - 120000) && // 2 minutes max
+                        msg.message && msg.nickname
+                    );
+
+                    if (newMessages.length > 0) {
+                        console.log(`🔔 ${newMessages.length} nouveaux messages détectés`);
+                        
+                        // Incrémenter le badge pour chaque nouveau message
+                        newMessages.forEach(msg => {
+                            incrementMobileBadge();
+                        });
+                        
+                        // Afficher notification pour le dernier message seulement
+                        const lastMessage = newMessages[newMessages.length - 1];
+                        showMobileChatNotification(lastMessage);
+                        
+                        lastMessageTimestamp = Math.max(...messages.map(m => m.timestamp));
+                    }
+
                     messages.forEach(msg => {
                         const messageDiv = document.createElement('div');
                         const isOwn = msg.userId === sessionStorage.getItem('firebaseUID');
@@ -640,18 +668,198 @@
                         `;
                         container.appendChild(messageDiv);
                     });
-                    
+
                     container.scrollTop = container.scrollHeight;
                 } else {
                     container.innerHTML = '<div class="no-messages">💬 Aucun message</div>';
                 }
             });
         }
+
+        // Récupérer paramètres notifications
+        function getMobileNotificationSettings() {
+            try {
+                const settings = JSON.parse(localStorage.getItem('mobileNotificationSettings')) || { sound: true, push: true, vibrate: true };
+                return settings;
+            } catch (e) {
+                return { sound: true, push: true, vibrate: true };
+            }
+        }
+
+        // Afficher notification mobile
+        function showMobileChatNotification(message) {
+            const settings = getMobileNotificationSettings();
+
+            // Vérifier permissions et préférences push
+            if (Notification.permission !== 'granted') {
+                console.log('❌ Permissions notifications non accordées');
+                return;
+            }
+
+            if (!settings.push) {
+                console.log('🔕 Notifications push désactivées dans les paramètres');
+                return;
+            }
+
+            // Ne pas notifier si l'app est active et sur le chat
+            if (document.hasFocus() && isOnMobileChatSection()) {
+                console.log('🔕 Pas de notification - sur le chat');
+                // Jouer le son même si on est sur le chat (si activé)
+                if (settings.sound) {
+                    playMobileNotificationSound();
+                }
+                return;
+            }
+
+            console.log('🔔 Affichage notification mobile:', message.nickname, message.message);
+
+            try {
+                const notification = new Notification(`💬 ${message.nickname}`, {
+                    body: message.message.substring(0, 100),
+                    icon: './Misterpips.jpg',
+                    badge: './Misterpips.jpg',
+                    tag: 'misterpips-mobile-chat-' + Date.now(),
+                    requireInteraction: false,
+                    silent: true, // Toujours silent car on gère le son manuellement
+                    vibrate: settings.vibrate ? [300, 100, 300] : []
+                });
+
+                // Son personnalisé selon les préférences
+                if (settings.sound) {
+                    playMobileNotificationSound();
+                }
+
+                // Vibration mobile selon les préférences
+                if (settings.vibrate && 'vibrate' in navigator) {
+                    navigator.vibrate([300, 100, 300]);
+                }
+
+                // Clic pour ouvrir
+                notification.onclick = () => {
+                    console.log('🔔 Clic notification mobile');
+                    window.focus();
+                    if (window.showMobileSection) {
+                        window.showMobileSection('chat');
+                    }
+                    resetMobileBadge();
+                    notification.close();
+                };
+
+                // Auto-fermer après 10 secondes
+                setTimeout(() => {
+                    try {
+                        notification.close();
+                    } catch (e) {}
+                }, 10000);
+
+            } catch (error) {
+                console.error('❌ Erreur création notification mobile:', error);
+            }
+        }
+
+        // Vérifier si on est sur le chat mobile
+        function isOnMobileChatSection() {
+            const chatSection = document.getElementById('chat');
+            return chatSection && chatSection.classList.contains('active');
+        }
+
+        // Jouer son de notification mobile
+        function playMobileNotificationSound() {
+            try {
+                // Vérifier si le son est activé
+                const settings = getMobileNotificationSettings();
+                if (!settings.sound) {
+                    console.log('🔇 Son désactivé dans les paramètres');
+                    return;
+                }
+
+                const audioContext = new (window.AudioContext || window.webkitAudioContext)();
+                const oscillator = audioContext.createOscillator();
+                const gainNode = audioContext.createGain();
+
+                oscillator.connect(gainNode);
+                gainNode.connect(audioContext.destination);
+
+                oscillator.frequency.setValueAtTime(800, audioContext.currentTime);
+                oscillator.frequency.setValueAtTime(600, audioContext.currentTime + 0.1);
+
+                gainNode.gain.setValueAtTime(0.3, audioContext.currentTime);
+                gainNode.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + 0.5);
+
+                oscillator.start(audioContext.currentTime);
+                oscillator.stop(audioContext.currentTime + 0.5);
+
+                console.log('🔊 Son notification mobile joué');
+            } catch (error) {
+                console.log('❌ Erreur son mobile:', error);
+            }
+        }
+
+        // Incrémenter badge mobile
+        function incrementMobileBadge() {
+            messageCount++;
+            updateMobileBadge();
+        }
+
+        // Reset badge mobile
+        function resetMobileBadge() {
+            messageCount = 0;
+            updateMobileBadge();
+        }
+
+        // Mettre à jour badge mobile
+        function updateMobileBadge() {
+            // Badge sur l'icône PWA
+            if ('setAppBadge' in navigator) {
+                if (messageCount > 0) {
+                    navigator.setAppBadge(messageCount);
+                } else {
+                    navigator.clearAppBadge();
+                }
+            }
+
+            // Badge sur navigation bottom
+            const chatNavBtn = document.querySelector('.nav-btn[onclick*="chat"]');
+            if (chatNavBtn) {
+                let badge = chatNavBtn.querySelector('.nav-badge');
+
+                if (messageCount > 0) {
+                    if (!badge) {
+                        badge = document.createElement('div');
+                        badge.className = 'nav-badge';
+                        chatNavBtn.appendChild(badge);
+                    }
+                    badge.textContent = messageCount > 99 ? '99+' : messageCount;
+                } else if (badge) {
+                    badge.remove();
+                }
+            }
+        }
         
-        // Reset compteur messages (géré par mobile-notifications.js)
+        // Reset compteur messages
         function resetChatNotifications() {
-            if (window.resetSimpleBadge) {
-                window.resetSimpleBadge();
+            resetMobileBadge();
+        }
+
+        // Initialiser le reset du badge au chargement du chat
+        function initMobileBadgeReset() {
+            // Reset quand on ouvre le chat via navigation
+            const chatNavBtn = document.querySelector('.nav-btn[onclick*="chat"]');
+            if (chatNavBtn) {
+                chatNavBtn.addEventListener('click', resetMobileBadge);
+            }
+
+            // Observer changement de section
+            const chatSection = document.getElementById('chat');
+            if (chatSection) {
+                const observer = new MutationObserver((mutations) => {
+                    mutations.forEach((mutation) => {
+                        if (mutation.target.classList.contains('active')) {
+                            resetMobileBadge();
+                        }
+                    });
+                });
+                observer.observe(chatSection, { attributes: true, attributeFilter: ['class'] });
             }
         }
         
@@ -929,6 +1137,38 @@
                 // Charger les comptes
                 loadMobileAccounts();
                 
+                // Gestion des toggles de notifications
+                const soundToggle = document.getElementById('mobileSoundToggle');
+                const pushToggle = document.getElementById('mobilePushToggle');
+                const vibrateToggle = document.getElementById('mobileVibrateToggle');
+                
+                if (soundToggle) {
+                    soundToggle.addEventListener('change', () => {
+                        const settings = getMobileNotificationSettings();
+                        settings.sound = soundToggle.checked;
+                        localStorage.setItem('mobileNotificationSettings', JSON.stringify(settings));
+                        console.log('🔊 Son notifications:', soundToggle.checked ? 'activé' : 'désactivé');
+                    });
+                }
+                
+                if (pushToggle) {
+                    pushToggle.addEventListener('change', () => {
+                        const settings = getMobileNotificationSettings();
+                        settings.push = pushToggle.checked;
+                        localStorage.setItem('mobileNotificationSettings', JSON.stringify(settings));
+                        console.log('🔔 Push notifications:', pushToggle.checked ? 'activé' : 'désactivé');
+                    });
+                }
+                
+                if (vibrateToggle) {
+                    vibrateToggle.addEventListener('change', () => {
+                        const settings = getMobileNotificationSettings();
+                        settings.vibrate = vibrateToggle.checked;
+                        localStorage.setItem('mobileNotificationSettings', JSON.stringify(settings));
+                        console.log('📳 Vibrations:', vibrateToggle.checked ? 'activé' : 'désactivé');
+                    });
+                }
+                
                 // Bouton activation notifications
                 const activateNotifBtn = document.getElementById('activateNotificationsBtn');
                 if (activateNotifBtn) {
@@ -937,22 +1177,47 @@
                             if ('Notification' in window) {
                                 const permission = await Notification.requestPermission();
                                 if (permission === 'granted') {
-                                    new Notification('✅ Notifications activées !', {
+                                    // Activer automatiquement les notifications push
+                                    document.getElementById('mobilePushToggle').checked = true;
+                                    
+                                    // Sauvegarder les paramètres
+                                    const account = mobileAccounts[currentMobileAccount];
+                                    if (account) {
+                                        account.notifications = account.notifications || {};
+                                        account.notifications.push = true;
+                                        localStorage.setItem('mobileAccounts', JSON.stringify(mobileAccounts));
+                                        localStorage.setItem('mobileNotificationSettings', JSON.stringify(account.notifications));
+                                    }
+                                    
+                                    // Notification de test
+                                    const testNotif = new Notification('✅ Notifications activées !', {
                                         body: 'Vous recevrez les messages du chat VIP',
-                                        icon: './Misterpips.jpg'
+                                        icon: './Misterpips.jpg',
+                                        silent: true
                                     });
+                                    
+                                    // Jouer le son de test
+                                    playMobileNotificationSound();
+                                    
+                                    // Vibration de test
+                                    if ('vibrate' in navigator) {
+                                        navigator.vibrate([200, 100, 200]);
+                                    }
+                                    
                                     activateNotifBtn.textContent = '✅ Notifications Activées';
                                     activateNotifBtn.style.background = '#28a745';
                                     activateNotifBtn.disabled = true;
+                                    
+                                    setTimeout(() => testNotif.close(), 5000);
                                 } else {
-                                    alert('❌ Permissions refusées');
+                                    alert('❌ Permissions refusées. Veuillez autoriser les notifications dans les paramètres de votre navigateur.');
                                 }
                             } else {
-                                alert('❌ Notifications non supportées');
+                                alert('❌ Notifications non supportées par votre navigateur');
                             }
                         } catch (error) {
                             console.error('Erreur notifications:', error);
-                            alert('❌ Erreur activation notifications');
+                            alert('❌ Erreur activation notifications: ' + error.message);
                         }
                     });
                     
@@ -961,6 +1226,10 @@
                         activateNotifBtn.textContent = '✅ Notifications Activées';
                         activateNotifBtn.style.background = '#28a745';
                         activateNotifBtn.disabled = true;
+                    } else if (Notification.permission === 'denied') {
+                        activateNotifBtn.textContent = '❌ Permissions Refusées';
+                        activateNotifBtn.style.background = '#dc3545';
+                        activateNotifBtn.disabled = true;
                     }
                 }
                 
@@ -968,25 +1237,35 @@
                 
                 // Pseudo géré par mobile-fix-simple.js
                 loadMobileChat();
-                
+
                 // Initialiser le gestionnaire de pseudo unifié
                 setTimeout(() => {
                     if (window.unifiedNicknameSync) {
                         window.unifiedNicknameSync.initialize();
                     }
-                    
+
                     // Fix chat - initialiser l'écoute des messages
                     if (window.firebaseDB && !window.chatInitialized) {
                         loadMobileChat();
                         window.chatInitialized = true;
+                        // Initialiser le reset du badge
+                        initMobileBadgeReset();
                     }
                 }, 2000);
             }, 1000);
         });
         
         // Gestion des comptes mobiles
-        let mobileAccounts = JSON.parse(localStorage.getItem('mobileAccounts')) || { default: { name: 'Compte Principal', capital: 1000, dailyGoal: 10, monthlyGoal: 300 } };
+        let mobileAccounts = JSON.parse(localStorage.getItem('mobileAccounts')) || { default: { name: 'Compte Principal', capital: 1000, dailyGoal: 10, monthlyGoal: 300, notifications: { sound: true, push: true, vibrate: true } } };
         let currentMobileAccount = localStorage.getItem('currentMobileAccount') || 'default';
+
+        // Migration: ajouter paramètres notifications aux comptes existants
+        Object.keys(mobileAccounts).forEach(accountId => {
+            if (!mobileAccounts[accountId].notifications) {
+                mobileAccounts[accountId].notifications = { sound: true, push: true, vibrate: true };
+            }
+        });
+        localStorage.setItem('mobileAccounts', JSON.stringify(mobileAccounts));
         
         function loadMobileAccounts() {
             const headerSelect = document.getElementById('headerAccountSelect');
@@ -1041,14 +1320,23 @@
         function loadCurrentMobileAccount() {
             const account = mobileAccounts[currentMobileAccount];
             if (!account) return;
-            
+
             document.getElementById('mobileAccountName').value = account.name;
             document.getElementById('mobileCapitalInput').value = account.capital;
             document.getElementById('mobileDailyGoal').value = account.dailyGoal;
             document.getElementById('mobileMonthlyGoal').value = account.monthlyGoal;
-            
+
             document.getElementById('mobileCapital').textContent = `$${account.capital}`;
-            
+
+            // Charger paramètres notifications
+            const notifications = account.notifications || { sound: true, push: true, vibrate: true };
+            document.getElementById('mobileSoundToggle').checked = notifications.sound;
+            document.getElementById('mobilePushToggle').checked = notifications.push;
+            document.getElementById('mobileVibrateToggle').checked = notifications.vibrate;
+
+            // Mettre à jour les préférences globales pour les notifications
+            localStorage.setItem('mobileNotificationSettings', JSON.stringify(notifications));
+
             const deleteBtn = document.getElementById('deleteMobileAccountBtn');
             if (deleteBtn) {
                 deleteBtn.style.display = currentMobileAccount === 'default' ? 'none' : 'block';
@@ -1073,15 +1361,16 @@
         function addMobileAccount() {
             const name = prompt('Nom du nouveau compte:', 'Nouveau Compte');
             if (!name) return;
-            
+
             const id = 'acc_' + Date.now();
             mobileAccounts[id] = {
                 name: name,
                 capital: 1000,
                 dailyGoal: 10,
-                monthlyGoal: 300
+                monthlyGoal: 300,
+                notifications: { sound: true, push: true, vibrate: true }
             };
-            
+
             localStorage.setItem('mobileAccounts', JSON.stringify(mobileAccounts));
             loadMobileAccounts();
         }
@@ -1109,14 +1398,27 @@
         function saveMobileAccountSettings() {
             const account = mobileAccounts[currentMobileAccount];
             if (!account) return;
-            
+
             account.name = document.getElementById('mobileAccountName').value;
             account.capital = parseFloat(document.getElementById('mobileCapitalInput').value) || 1000;
             account.dailyGoal = parseFloat(document.getElementById('mobileDailyGoal').value) || 10;
             account.monthlyGoal = parseFloat(document.getElementById('mobileMonthlyGoal').value) || 300;
-            
+
+            // Sauvegarder paramètres notifications
+            account.notifications = {
+                sound: document.getElementById('mobileSoundToggle').checked,
+                push: document.getElementById('mobilePushToggle').checked,
+                vibrate: document.getElementById('mobileVibrateToggle').checked
+            };
+
             localStorage.setItem('mobileAccounts', JSON.stringify(mobileAccounts));
             loadMobileAccounts();
+
+            // Mettre à jour les préférences globales pour les notifications
+            localStorage.setItem('mobileNotificationSettings', JSON.stringify(account.notifications));
+
+            console.log('💾 Paramètres notifications sauvegardés:', account.notifications);
+            alert('✅ Paramètres sauvegardés !');
         }
         
         // Fonctions globales

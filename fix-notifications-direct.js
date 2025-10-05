@@ -75,42 +75,56 @@ function startDirectListening() {
         });
 }
 
+// Récupérer paramètres notifications
+function getDirectNotificationSettings() {
+    try {
+        const settings = JSON.parse(localStorage.getItem('mobileNotificationSettings')) || { sound: true, push: true, vibrate: true };
+        return settings;
+    } catch (e) {
+        return { sound: true, push: true, vibrate: true };
+    }
+}
+
 // Notification directe
 function showDirectNotification(message) {
-    if (!notificationEnabled || document.hasFocus()) return;
-    
+    const settings = getDirectNotificationSettings();
+
+    if (!notificationEnabled || document.hasFocus() || !settings.push) return;
+
     console.log('🔔 Notification:', message.nickname);
-    
+
     const notification = new Notification(`💬 ${message.nickname}`, {
         body: message.message.substring(0, 80),
         icon: './Misterpips.jpg',
         tag: 'misterpips-chat',
-        requireInteraction: false
+        requireInteraction: false,
+        silent: !settings.sound,
+        vibrate: settings.vibrate ? [300, 100, 300] : []
     });
-    
-    // Vibration
-    if ('vibrate' in navigator) {
+
+    // Vibration selon préférences
+    if (settings.vibrate && 'vibrate' in navigator) {
         navigator.vibrate([300, 100, 300]);
     }
-    
+
     // Clic pour ouvrir
     notification.onclick = () => {
         window.focus();
-        
+
         // Mobile
         if (window.showMobileSection) {
             window.showMobileSection('chat');
         }
-        
+
         // PC
         const chatWindow = document.getElementById('chatWindow');
         if (chatWindow) {
             chatWindow.classList.add('active');
         }
-        
+
         notification.close();
     };
-    
+
     // Auto-fermer
     setTimeout(() => notification.close(), 6000);
 }

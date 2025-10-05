@@ -1,0 +1,398 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Test Notifications Mobile</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 600px;
+            margin: 50px auto;
+            padding: 20px;
+            background: #1a1a2e;
+            color: #fff;
+        }
+        .test-section {
+            background: #16213e;
+            padding: 20px;
+            margin: 20px 0;
+            border-radius: 10px;
+            border: 1px solid #00d4ff;
+        }
+        button {
+            background: #00d4ff;
+            color: #000;
+            border: none;
+            padding: 15px 30px;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 16px;
+            margin: 10px 5px;
+            width: 100%;
+        }
+        button:hover {
+            background: #00b8e6;
+        }
+        .status {
+            padding: 10px;
+            margin: 10px 0;
+            border-radius: 5px;
+            background: #0f3460;
+        }
+        .success { background: #28a745; }
+        .error { background: #dc3545; }
+        .warning { background: #ffc107; color: #000; }
+        .toggle-container {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin: 15px 0;
+        }
+        .switch {
+            position: relative;
+            display: inline-block;
+            width: 60px;
+            height: 34px;
+        }
+        .switch input {
+            opacity: 0;
+            width: 0;
+            height: 0;
+        }
+        .slider {
+            position: absolute;
+            cursor: pointer;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background-color: #ccc;
+            transition: .4s;
+            border-radius: 34px;
+        }
+        .slider:before {
+            position: absolute;
+            content: "";
+            height: 26px;
+            width: 26px;
+            left: 4px;
+            bottom: 4px;
+            background-color: white;
+            transition: .4s;
+            border-radius: 50%;
+        }
+        input:checked + .slider {
+            background-color: #00d4ff;
+        }
+        input:checked + .slider:before {
+            transform: translateX(26px);
+        }
+    </style>
+</head>
+<body>
+    <h1>🔔 Test Notifications Mobile</h1>
+    
+    <div class="test-section">
+        <h2>État des Permissions</h2>
+        <div id="permissionStatus" class="status">Vérification...</div>
+    </div>
+
+    <div class="test-section">
+        <h2>Paramètres Notifications</h2>
+        <div class="toggle-container">
+            <span>🔊 Sons</span>
+            <label class="switch">
+                <input type="checkbox" id="testSoundToggle" checked>
+                <span class="slider"></span>
+            </label>
+        </div>
+        <div class="toggle-container">
+            <span>🔔 Notifications Push</span>
+            <label class="switch">
+                <input type="checkbox" id="testPushToggle" checked>
+                <span class="slider"></span>
+            </label>
+        </div>
+        <div class="toggle-container">
+            <span>📳 Vibrations</span>
+            <label class="switch">
+                <input type="checkbox" id="testVibrateToggle" checked>
+                <span class="slider"></span>
+            </label>
+        </div>
+    </div>
+
+    <div class="test-section">
+        <h2>Tests</h2>
+        <button onclick="requestPermission()">1️⃣ Demander Permission</button>
+        <button onclick="testSound()">2️⃣ Tester Son</button>
+        <button onclick="testVibration()">3️⃣ Tester Vibration</button>
+        <button onclick="testNotification()">4️⃣ Tester Notification</button>
+        <button onclick="testCompleteNotification()">5️⃣ Test Complet (Son + Push + Vibration)</button>
+    </div>
+
+    <div class="test-section">
+        <h2>Logs</h2>
+        <div id="logs" style="max-height: 300px; overflow-y: auto; font-family: monospace; font-size: 12px;"></div>
+    </div>
+
+    <script>
+        // Fonction de log
+        function log(message, type = 'info') {
+            const logsDiv = document.getElementById('logs');
+            const time = new Date().toLocaleTimeString();
+            const colors = {
+                info: '#00d4ff',
+                success: '#28a745',
+                error: '#dc3545',
+                warning: '#ffc107'
+            };
+            logsDiv.innerHTML += `<div style="color: ${colors[type]}; margin: 5px 0;">[${time}] ${message}</div>`;
+            logsDiv.scrollTop = logsDiv.scrollHeight;
+            console.log(message);
+        }
+
+        // Vérifier l'état des permissions
+        function checkPermissionStatus() {
+            const statusDiv = document.getElementById('permissionStatus');
+            
+            if (!('Notification' in window)) {
+                statusDiv.className = 'status error';
+                statusDiv.textContent = '❌ Notifications non supportées';
+                log('Notifications non supportées par ce navigateur', 'error');
+                return;
+            }
+
+            const permission = Notification.permission;
+            
+            if (permission === 'granted') {
+                statusDiv.className = 'status success';
+                statusDiv.textContent = '✅ Permissions accordées';
+                log('Permissions notifications: accordées', 'success');
+            } else if (permission === 'denied') {
+                statusDiv.className = 'status error';
+                statusDiv.textContent = '❌ Permissions refusées';
+                log('Permissions notifications: refusées', 'error');
+            } else {
+                statusDiv.className = 'status warning';
+                statusDiv.textContent = '⚠️ Permissions non demandées';
+                log('Permissions notifications: non demandées', 'warning');
+            }
+        }
+
+        // Demander permission
+        async function requestPermission() {
+            log('Demande de permission...', 'info');
+            
+            if (!('Notification' in window)) {
+                alert('❌ Notifications non supportées');
+                log('Notifications non supportées', 'error');
+                return;
+            }
+
+            try {
+                const permission = await Notification.requestPermission();
+                log(`Permission: ${permission}`, permission === 'granted' ? 'success' : 'error');
+                checkPermissionStatus();
+                
+                if (permission === 'granted') {
+                    alert('✅ Permissions accordées !');
+                } else {
+                    alert('❌ Permissions refusées');
+                }
+            } catch (error) {
+                log(`Erreur: ${error.message}`, 'error');
+                alert('❌ Erreur: ' + error.message);
+            }
+        }
+
+        // Tester le son
+        function testSound() {
+            const soundEnabled = document.getElementById('testSoundToggle').checked;
+            
+            if (!soundEnabled) {
+                log('Son désactivé dans les paramètres', 'warning');
+                alert('⚠️ Son désactivé dans les paramètres');
+                return;
+            }
+
+            log('Test du son...', 'info');
+            
+            try {
+                const audioContext = new (window.AudioContext || window.webkitAudioContext)();
+                const oscillator = audioContext.createOscillator();
+                const gainNode = audioContext.createGain();
+
+                oscillator.connect(gainNode);
+                gainNode.connect(audioContext.destination);
+
+                oscillator.frequency.setValueAtTime(800, audioContext.currentTime);
+                oscillator.frequency.setValueAtTime(600, audioContext.currentTime + 0.1);
+
+                gainNode.gain.setValueAtTime(0.3, audioContext.currentTime);
+                gainNode.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + 0.5);
+
+                oscillator.start(audioContext.currentTime);
+                oscillator.stop(audioContext.currentTime + 0.5);
+
+                log('🔊 Son joué avec succès', 'success');
+            } catch (error) {
+                log(`Erreur son: ${error.message}`, 'error');
+                alert('❌ Erreur: ' + error.message);
+            }
+        }
+
+        // Tester vibration
+        function testVibration() {
+            const vibrateEnabled = document.getElementById('testVibrateToggle').checked;
+            
+            if (!vibrateEnabled) {
+                log('Vibration désactivée dans les paramètres', 'warning');
+                alert('⚠️ Vibration désactivée dans les paramètres');
+                return;
+            }
+
+            log('Test de vibration...', 'info');
+            
+            if ('vibrate' in navigator) {
+                navigator.vibrate([300, 100, 300]);
+                log('📳 Vibration déclenchée', 'success');
+            } else {
+                log('Vibration non supportée', 'error');
+                alert('❌ Vibration non supportée');
+            }
+        }
+
+        // Tester notification
+        function testNotification() {
+            const pushEnabled = document.getElementById('testPushToggle').checked;
+            
+            if (!pushEnabled) {
+                log('Notifications push désactivées dans les paramètres', 'warning');
+                alert('⚠️ Notifications push désactivées dans les paramètres');
+                return;
+            }
+
+            if (Notification.permission !== 'granted') {
+                log('Permissions non accordées', 'error');
+                alert('❌ Veuillez d\'abord accorder les permissions');
+                return;
+            }
+
+            log('Création de la notification...', 'info');
+            
+            try {
+                const notification = new Notification('🔔 Test Notification', {
+                    body: 'Ceci est un test de notification mobile',
+                    icon: './Misterpips.jpg',
+                    badge: './Misterpips.jpg',
+                    tag: 'test-notification',
+                    requireInteraction: false,
+                    silent: true
+                });
+
+                notification.onclick = () => {
+                    log('Notification cliquée', 'info');
+                    notification.close();
+                };
+
+                setTimeout(() => notification.close(), 5000);
+                log('✅ Notification affichée', 'success');
+            } catch (error) {
+                log(`Erreur notification: ${error.message}`, 'error');
+                alert('❌ Erreur: ' + error.message);
+            }
+        }
+
+        // Test complet
+        function testCompleteNotification() {
+            const soundEnabled = document.getElementById('testSoundToggle').checked;
+            const pushEnabled = document.getElementById('testPushToggle').checked;
+            const vibrateEnabled = document.getElementById('testVibrateToggle').checked;
+
+            log('=== TEST COMPLET ===', 'info');
+            log(`Son: ${soundEnabled}, Push: ${pushEnabled}, Vibration: ${vibrateEnabled}`, 'info');
+
+            if (Notification.permission !== 'granted') {
+                log('Permissions non accordées', 'error');
+                alert('❌ Veuillez d\'abord accorder les permissions');
+                return;
+            }
+
+            try {
+                // Notification
+                if (pushEnabled) {
+                    const notification = new Notification('💬 Nouveau Message', {
+                        body: 'Test complet de notification avec son et vibration',
+                        icon: './Misterpips.jpg',
+                        badge: './Misterpips.jpg',
+                        tag: 'complete-test',
+                        requireInteraction: false,
+                        silent: true
+                    });
+
+                    notification.onclick = () => {
+                        log('Notification cliquée', 'info');
+                        notification.close();
+                    };
+
+                    setTimeout(() => notification.close(), 5000);
+                    log('✅ Notification affichée', 'success');
+                }
+
+                // Son
+                if (soundEnabled) {
+                    const audioContext = new (window.AudioContext || window.webkitAudioContext)();
+                    const oscillator = audioContext.createOscillator();
+                    const gainNode = audioContext.createGain();
+
+                    oscillator.connect(gainNode);
+                    gainNode.connect(audioContext.destination);
+
+                    oscillator.frequency.setValueAtTime(800, audioContext.currentTime);
+                    oscillator.frequency.setValueAtTime(600, audioContext.currentTime + 0.1);
+
+                    gainNode.gain.setValueAtTime(0.3, audioContext.currentTime);
+                    gainNode.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + 0.5);
+
+                    oscillator.start(audioContext.currentTime);
+                    oscillator.stop(audioContext.currentTime + 0.5);
+
+                    log('🔊 Son joué', 'success');
+                }
+
+                // Vibration
+                if (vibrateEnabled && 'vibrate' in navigator) {
+                    navigator.vibrate([300, 100, 300]);
+                    log('📳 Vibration déclenchée', 'success');
+                }
+
+                log('=== TEST TERMINÉ ===', 'success');
+            } catch (error) {
+                log(`Erreur: ${error.message}`, 'error');
+                alert('❌ Erreur: ' + error.message);
+            }
+        }
+
+        // Sauvegarder les paramètres
+        document.getElementById('testSoundToggle').addEventListener('change', (e) => {
+            log(`Son: ${e.target.checked ? 'activé' : 'désactivé'}`, 'info');
+        });
+
+        document.getElementById('testPushToggle').addEventListener('change', (e) => {
+            log(`Push: ${e.target.checked ? 'activé' : 'désactivé'}`, 'info');
+        });
+
+        document.getElementById('testVibrateToggle').addEventListener('change', (e) => {
+            log(`Vibration: ${e.target.checked ? 'activé' : 'désactivé'}`, 'info');
+        });
+
+        // Initialisation
+        window.addEventListener('load', () => {
+            log('Page de test chargée', 'success');
+            checkPermissionStatus();
+        });
+    </script>
+</body>
+</html>
