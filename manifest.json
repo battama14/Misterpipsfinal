@@ -2,7 +2,6 @@
   "name": "Misterpips - Trading Professionnel",
   "short_name": "Misterpips",
   "description": "Application de trading professionnelle avec dashboard, analyses et outils VIP",
-  "version": "2.0.0",
   "start_url": "/mobile-dashboard.html",
   "display": "standalone",
   "orientation": "portrait-primary",
