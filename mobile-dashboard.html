@@ -300,6 +300,9 @@
                             </label>
                         </label>
                     </div>
+                    <div class="setting-item">
+                        <button id="activateNotificationsBtn" class="primary-btn">🔔 Activer les Notifications</button>
+                    </div>
                 </div>
                 
                 <button id="saveSettingsBtn" class="primary-btn">💾 Sauvegarder</button>
@@ -362,7 +365,7 @@
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <script src="mobile-trades.js"></script>
     <script src="ranking-nickname-sync.js"></script>
-    <script src="force-iphone-banner.js"></script>
+
     <script src="fix-nickname-mobile.js"></script>
     <script src="fix-notifications-direct.js"></script>
     <script src="mobile-functions-check.js"></script>
@@ -965,8 +968,8 @@
                     saveBtn.addEventListener('click', (e) => {
                         e.preventDefault();
                         e.stopPropagation();
-                        if (window.forceSaveNickname) {
-                            window.forceSaveNickname();
+                        if (window.saveUnifiedNickname) {
+                            window.saveUnifiedNickname(true); // fromSettings = true
                         } else {
                             const input = document.getElementById('mobileNickname');
                             if (input && input.value.trim()) {
@@ -1016,6 +1019,41 @@
                 
                 // Charger les comptes
                 loadMobileAccounts();
+                
+                // Bouton activation notifications
+                const activateNotifBtn = document.getElementById('activateNotificationsBtn');
+                if (activateNotifBtn) {
+                    activateNotifBtn.addEventListener('click', async () => {
+                        try {
+                            if ('Notification' in window) {
+                                const permission = await Notification.requestPermission();
+                                if (permission === 'granted') {
+                                    new Notification('✅ Notifications activées !', {
+                                        body: 'Vous recevrez les messages du chat VIP',
+                                        icon: './Misterpips.jpg'
+                                    });
+                                    activateNotifBtn.textContent = '✅ Notifications Activées';
+                                    activateNotifBtn.style.background = '#28a745';
+                                    activateNotifBtn.disabled = true;
+                                } else {
+                                    alert('❌ Permissions refusées');
+                                }
+                            } else {
+                                alert('❌ Notifications non supportées');
+                            }
+                        } catch (error) {
+                            console.error('Erreur notifications:', error);
+                            alert('❌ Erreur activation notifications');
+                        }
+                    });
+                    
+                    // Vérifier si déjà activé
+                    if (Notification.permission === 'granted') {
+                        activateNotifBtn.textContent = '✅ Notifications Activées';
+                        activateNotifBtn.style.background = '#28a745';
+                        activateNotifBtn.disabled = true;
+                    }
+                }
                 
                 const widgetSend = document.getElementById('widgetSend');
                 const widgetInput = document.getElementById('widgetInput');

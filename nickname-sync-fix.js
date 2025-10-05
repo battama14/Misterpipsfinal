@@ -8,8 +8,15 @@ class NicknameSyncFix {
         this.loading = false;
     }
 
-    async saveNickname(nickname) {
+    async saveNickname(nickname, fromSettings = false) {
         if (this.saving || !nickname) return false;
+        
+        // Seuls les paramètres peuvent sauvegarder
+        if (!fromSettings) {
+            console.log('⚠️ Sauvegarde pseudo bloquée - utiliser les paramètres');
+            return false;
+        }
+        
         this.saving = true;
 
         const uid = sessionStorage.getItem('firebaseUID');
@@ -129,7 +136,7 @@ class NicknameSyncFix {
 window.nicknameSyncFix = new NicknameSyncFix();
 
 // Remplacer toutes les fonctions existantes
-window.saveUnifiedNickname = async function() {
+window.saveUnifiedNickname = async function(fromSettings = false) {
     if (window.nicknameSyncFix.saving) return false;
 
     const inputs = [
@@ -150,13 +157,15 @@ window.saveUnifiedNickname = async function() {
         return false;
     }
 
-    const success = await window.nicknameSyncFix.saveNickname(nickname);
+    const success = await window.nicknameSyncFix.saveNickname(nickname, fromSettings);
     if (success) {
         // UN SEUL popup
         if (!window.lastNicknameAlert || Date.now() - window.lastNicknameAlert > 2000) {
             alert('✅ Pseudo sauvegardé et synchronisé PC/Mobile !');
             window.lastNicknameAlert = Date.now();
         }
+    } else if (!fromSettings) {
+        alert('⚠️ Modifiez votre pseudo dans les Paramètres');
     }
     return success;
 };

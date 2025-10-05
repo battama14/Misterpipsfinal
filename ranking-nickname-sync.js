@@ -25,15 +25,16 @@ async function loadUnifiedRanking() {
             const user = users[uid];
             const userRanking = ranking[uid] || {};
             
-            if (user.profile && user.profile.nickname) {
+            // Vérifier si l'utilisateur est VIP et a un pseudo
+            if (user.isVIP && user.nickname) {
                 unifiedRanking.push({
                     uid: uid,
-                    nickname: user.profile.nickname,
-                    email: user.profile.email || 'N/A',
+                    nickname: user.nickname,
+                    email: user.email || 'N/A',
                     winRate: userRanking.winRate || 0,
                     totalTrades: userRanking.totalTrades || 0,
                     profit: userRanking.profit || 0,
-                    lastUpdate: user.profile.lastUpdate || 0
+                    lastUpdate: userRanking.lastUpdate || 0
                 });
             }
         });
