@@ -3,28 +3,8 @@ let messageCount = 0;
 
 // Demander permissions au premier lancement PWA
 function requestPWAPermissions() {
-    if (window.matchMedia('(display-mode: standalone)').matches) {
-        setTimeout(async () => {
-            try {
-                // Demander permission notifications
-                if ('Notification' in window && Notification.permission === 'default') {
-                    const permission = await Notification.requestPermission();
-                    if (permission === 'granted') {
-                        console.log('✅ Permissions notifications accordées');
-                        
-                        // Test notification
-                        new Notification('🎉 Misterpips installé !', {
-                            body: 'Vous recevrez maintenant les notifications du chat VIP',
-                            icon: './Misterpips.jpg',
-                            badge: './Misterpips.jpg'
-                        });
-                    }
-                }
-            } catch (error) {
-                console.error('Erreur permissions:', error);
-            }
-        }, 2000);
-    }
+    // Ne plus demander automatiquement - seulement via bouton paramètres
+    console.log('📱 PWA détectée - permissions via paramètres');
 }
 
 // Mettre à jour le badge de l'icône
