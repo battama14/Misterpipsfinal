@@ -1,0 +1,122 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Test PC Corrections</title>
+    <style>
+        body { font-family: Arial, sans-serif; padding: 20px; background: #f0f0f0; }
+        .test-section { background: white; padding: 20px; margin: 20px 0; border-radius: 10px; }
+        .btn { padding: 10px 20px; margin: 10px; border: none; border-radius: 5px; cursor: pointer; }
+        .btn-danger { background: #dc3545; color: white; }
+        .btn-info { background: #17a2b8; color: white; }
+        .btn-primary { background: #007bff; color: white; }
+        .delete-btn { background: #ff4444; color: white; padding: 5px 10px; }
+        table { width: 100%; border-collapse: collapse; margin: 20px 0; }
+        th, td { border: 1px solid #ddd; padding: 10px; text-align: left; }
+        #log { background: #000; color: #0f0; padding: 20px; font-family: monospace; height: 200px; overflow-y: scroll; }
+    </style>
+</head>
+<body>
+    <h1>🔧 Test des Corrections PC</h1>
+    
+    <div class="test-section">
+        <h2>1. Test Bouton Supprimer Compte</h2>
+        <select id="accountSelect">
+            <option value="Compte Principal">Compte Principal</option>
+            <option value="Compte Demo">Compte Demo</option>
+        </select>
+        <button id="deleteAccountBtn" class="btn btn-danger">🗑️ Supprimer Compte</button>
+        <p><strong>Test:</strong> Cliquer plusieurs fois rapidement - ne doit pas créer de boucle</p>
+    </div>
+    
+    <div class="test-section">
+        <h2>2. Test Bouton Ajouter Compte</h2>
+        <button id="addAccountBtn" class="btn btn-info">+ Nouveau Compte</button>
+        <p><strong>Test:</strong> Cliquer plusieurs fois rapidement - ne doit pas créer de popups multiples</p>
+    </div>
+    
+    <div class="test-section">
+        <h2>3. Test Boutons Supprimer Trade</h2>
+        <table>
+            <thead>
+                <tr><th>Date</th><th>Devise</th><th>Résultat</th><th>Actions</th></tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td>2025-01-01</td>
+                    <td>EUR/USD</td>
+                    <td>+50$</td>
+                    <td><button class="delete-btn">🗑️</button></td>
+                </tr>
+                <tr>
+                    <td>2025-01-02</td>
+                    <td>GBP/USD</td>
+                    <td>-30$</td>
+                    <td><button class="delete-btn">🗑️</button></td>
+                </tr>
+            </tbody>
+        </table>
+        <p><strong>Test:</strong> Cliquer sur les boutons 🗑️ - doit demander confirmation et supprimer</p>
+    </div>
+    
+    <div class="test-section">
+        <h2>4. Test Nouveau Trade</h2>
+        <button id="newTradeBtn" class="btn btn-primary">Nouveau Trade</button>
+        <form id="testForm">
+            <input type="text" placeholder="Devise" required>
+            <input type="submit" value="Valider Trade" class="btn btn-primary">
+        </form>
+        <p><strong>Test:</strong> Valider un trade - ne doit pas créer de popups répétitifs</p>
+    </div>
+    
+    <div class="test-section">
+        <h2>📊 Log des Actions</h2>
+        <div id="log"></div>
+        <button onclick="clearLog()" class="btn">Effacer Log</button>
+    </div>
+
+    <script>
+        // Système de log
+        function log(message) {
+            const logDiv = document.getElementById('log');
+            const time = new Date().toLocaleTimeString();
+            logDiv.innerHTML += `[${time}] ${message}\n`;
+            logDiv.scrollTop = logDiv.scrollHeight;
+            console.log(message);
+        }
+        
+        function clearLog() {
+            document.getElementById('log').innerHTML = '';
+        }
+        
+        // Fonctions de test simulées
+        window.deleteAccount = function() {
+            log('✅ Fonction deleteAccount() appelée');
+        };
+        
+        window.deleteTrade = function(index) {
+            log(`✅ Fonction deleteTrade(${index}) appelée`);
+        };
+        
+        // Démarrage du test
+        log('🔧 Test PC Corrections démarré');
+        log('📝 Cliquez sur les boutons pour tester les corrections');
+    </script>
+    
+    <!-- Script de correction à tester -->
+    <script src="pc-final-fix.js"></script>
+    
+    <script>
+        // Tests supplémentaires
+        document.getElementById('newTradeBtn').addEventListener('click', function() {
+            log('🆕 Bouton Nouveau Trade cliqué');
+        });
+        
+        document.getElementById('testForm').addEventListener('submit', function(e) {
+            e.preventDefault();
+            log('📝 Formulaire soumis');
+        });
+    </script>
+</body>
+</html>
