@@ -94,7 +94,7 @@ class SimpleTradingDashboard {
             this.currentUser = firebaseUID;
         }
         
-        // Ne pas initialiser automatiquement le pseudo
+        // Ne pas initialiser automatiquement le pseudo - laissé vide
         
         await this.loadData();
         this.setupEventListeners();
@@ -365,8 +365,6 @@ class SimpleTradingDashboard {
                     isVIP: true,
                     plan: 'VIP',
                     email: sessionStorage.getItem('userEmail') || 'user@example.com',
-                    displayName: sessionStorage.getItem('userNickname') || '',
-                    nickname: sessionStorage.getItem('userNickname') || '',
                     accounts: {
                         compte1: {
                             trades: this.trades,
@@ -377,12 +375,7 @@ class SimpleTradingDashboard {
                     lastUpdated: new Date().toISOString()
                 });
                 
-                // Le pseudo est géré par le gestionnaire unifié
-                const currentNickname = sessionStorage.getItem('userNickname') || '';
-                if (currentNickname) {
-                    const nicknameRef = ref(window.firebaseDB, `users/${this.currentUser}/nickname`);
-                    await set(nicknameRef, currentNickname);
-                }
+                // NE PAS sauvegarder automatiquement le pseudo - laissé vide par défaut
                 
                 const syncStatus = document.getElementById('syncStatus');
                 if (syncStatus) {

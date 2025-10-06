@@ -943,8 +943,8 @@ async function saveMobileDataComplete() {
             isVIP: true,
             plan: 'VIP',
             email: sessionStorage.getItem('userEmail') || 'user@example.com',
-            displayName: sessionStorage.getItem('userEmail')?.split('@')[0] || 'Trader',
-            nickname: mobileData.nickname || sessionStorage.getItem('userEmail')?.split('@')[0] || 'Trader'
+            displayName: '',
+            nickname: mobileData.nickname || ''
         };
         
         if (userSnapshot.exists()) {

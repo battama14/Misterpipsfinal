@@ -63,7 +63,7 @@ async function loadRealFirebaseRanking() {
             const winningTrades = todayTrades.filter(t => parseFloat(t.pnl) > 0).length;
             const winRate = todayTrades.length > 0 ? Math.round((winningTrades / todayTrades.length) * 100) : 0;
             
-            const nickname = userData.nickname || userData.displayName || 'Trader VIP';
+            const nickname = userData.nickname || 'Trader VIP';
             
             rankings.push({
                 uid,

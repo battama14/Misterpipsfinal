@@ -23,7 +23,7 @@ class iMessageChat {
     
     async init() {
         // Pseudo simple sans chargement automatique
-        this.nickname = sessionStorage.getItem('userNickname') || 'Trader VIP';
+        this.nickname = sessionStorage.getItem('userNickname') || '';
         this.createChatUI();
         this.setupEventListeners();
         this.loadMessages();

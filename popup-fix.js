@@ -23,6 +23,11 @@ class PopupFix {
     }
 
     showConfirm(message) {
+        // Ne pas bloquer les confirmations de trades
+        if (message.includes('Clôturer le trade') || message.includes('Supprimer le trade')) {
+            return originalConfirm(message);
+        }
+        
         const now = Date.now();
         const lastTime = this.lastAlerts.get(message) || 0;
         
@@ -32,7 +37,7 @@ class PopupFix {
         }
         
         this.lastAlerts.set(message, now);
-        return confirm(message);
+        return originalConfirm(message);
     }
 }
 

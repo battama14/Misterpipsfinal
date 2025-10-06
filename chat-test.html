@@ -1,0 +1,25 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Test Chat</title>
+</head>
+<body>
+    <div id="chatToggle" style="position: fixed; bottom: 20px; right: 20px; width: 60px; height: 60px; background: red; cursor: pointer;" onclick="openChat()">💬</div>
+    
+    <div id="chatWindow" style="display: none; position: fixed; bottom: 100px; right: 20px; width: 300px; height: 400px; background: white; border: 2px solid black;">
+        <div>Chat Window</div>
+        <button onclick="closeChat()">Close</button>
+    </div>
+    
+    <script>
+        function openChat() {
+            alert('Chat clicked!');
+            document.getElementById('chatWindow').style.display = 'block';
+        }
+        
+        function closeChat() {
+            document.getElementById('chatWindow').style.display = 'none';
+        }
+    </script>
+</body>
+</html>
