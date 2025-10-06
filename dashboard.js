@@ -1500,15 +1500,18 @@ class SimpleTradingDashboard {
         switch(closeType) {
             case 'TP':
                 closePrice = parseFloat(trade.takeProfit);
-                trade.status = 'tp';
+                trade.status = 'closed';
+                trade.result = 'TP';
                 break;
             case 'SL':
                 closePrice = parseFloat(trade.stopLoss);
-                trade.status = 'sl';
+                trade.status = 'closed';
+                trade.result = 'SL';
                 break;
             case 'BE':
                 closePrice = parseFloat(trade.entryPoint);
-                trade.status = 'be';
+                trade.status = 'closed';
+                trade.result = 'BE';
                 break;
             default:
                 console.error('Type de clôture invalide');
@@ -1527,10 +1530,7 @@ class SimpleTradingDashboard {
         await this.saveData();
         
         // Mettre à jour l'affichage
-        this.updateStats();
-        this.renderTradesTable();
-        this.renderCalendar();
-        this.updateCharts();
+        this.fullDashboardUpdate();
         
         // Fermer la modale
         this.closeModal();
