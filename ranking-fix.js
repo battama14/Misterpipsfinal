@@ -75,7 +75,7 @@ async function showRankingNow() {
             );
             
             // Récupérer le pseudo
-            let nickname = userData.displayName || userData.email?.split('@')[0] || 'Trader VIP';
+            let nickname = userData.displayName || 'Trader VIP';
             try {
                 const nicknameRef = ref(window.firebaseDB, `users/${uid}/nickname`);
                 const nicknameSnapshot = await get(nicknameRef);

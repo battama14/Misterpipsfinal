@@ -405,12 +405,10 @@ async function deleteTrade(index) {
     updateMobileStats();
     updateMobileCalendar();
     
-    // Mettre à jour le classement VIP
-    setTimeout(() => {
-        if (window.loadMobileRanking) {
-            window.loadMobileRanking();
-        }
-    }, 1000);
+    // Mettre à jour le classement VIP temps réel
+    if (window.updateRankingAfterTrade) {
+        window.updateRankingAfterTrade();
+    }
     
     alert('✅ Trade supprimé et synchronisé');
 }
@@ -598,12 +596,10 @@ function saveMobileTrade() {
     updateMobileStats();
     updateMobileCalendar();
     
-    // Mettre à jour le classement VIP
-    setTimeout(() => {
-        if (window.loadMobileRanking) {
-            window.loadMobileRanking();
-        }
-    }, 1000);
+    // Mettre à jour le classement VIP temps réel
+    if (window.updateRankingAfterTrade) {
+        window.updateRankingAfterTrade();
+    }
     
     closeMobileModal();
     alert('✅ Trade ajouté et synchronisé');
@@ -781,13 +777,13 @@ async function loadMobileRanking() {
                             nickname = rankingSnapshot.val();
                         } else {
                             // Fallback: email ou displayName
-                            nickname = userData.nickname || userData.displayName || userData.email?.split('@')[0] || 'Trader VIP';
+                            nickname = userData.nickname || userData.displayName || 'Trader VIP';
                         }
                     }
                 }
             } catch (error) {
                 console.error('Erreur récupération pseudo:', error);
-                nickname = userData.nickname || userData.displayName || userData.email?.split('@')[0] || 'Trader VIP';
+                nickname = userData.nickname || userData.displayName || 'Trader VIP';
             }
             
             rankings.push({

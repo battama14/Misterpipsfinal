@@ -22,13 +22,8 @@ class iMessageChat {
     }
     
     async init() {
-        // Utiliser le gestionnaire unifié pour le pseudo (sans forcer la demande)
-        if (window.nicknameManager) {
-            await window.nicknameManager.initialize();
-            this.nickname = window.nicknameManager.getNickname() || 'Trader VIP';
-        } else {
-            this.nickname = await this.getNickname();
-        }
+        // Pseudo simple sans chargement automatique
+        this.nickname = sessionStorage.getItem('userNickname') || 'Trader VIP';
         this.createChatUI();
         this.setupEventListeners();
         this.loadMessages();
@@ -142,9 +137,15 @@ class iMessageChat {
         const sendBtn = document.getElementById('sendBtn');
         const emojiBtn = document.getElementById('emojiBtn');
         const attachBtn = document.getElementById('attachBtn');
-        // Toggle chat
-        chatToggle.addEventListener('click', () => this.toggleChat());
-        closeChatBtn.addEventListener('click', () => this.closeChat());
+        // Toggle chat - correction
+        if (chatToggle) {
+            chatToggle.onclick = () => this.toggleChat();
+            chatToggle.addEventListener('click', () => this.toggleChat());
+        }
+        if (closeChatBtn) {
+            closeChatBtn.onclick = () => this.closeChat();
+            closeChatBtn.addEventListener('click', () => this.closeChat());
+        }
         
         // Input handling avec debouncing
         chatInput.addEventListener('input', this.debounce(() => {
@@ -215,8 +216,8 @@ class iMessageChat {
                     }
                 });
                 
-                // Pré-remplir avec le pseudo actuel
-                nicknameInput.value = this.nickname;
+                // Laisser le champ vide
+                nicknameInput.value = '';
             }
         }, 100);
     }
@@ -560,22 +561,13 @@ class iMessageChat {
     }
     
     async saveNickname(nickname) {
-        // Utiliser le gestionnaire unifié
-        if (window.nicknameManager) {
-            const success = await window.nicknameManager.saveNickname(nickname);
-            if (success) {
-                this.nickname = nickname;
-            }
-            return success;
-        }
-        
-        // Fallback pour compatibilité
         try {
             if (window.firebaseDB) {
                 const { ref, set } = await import('https://www.gstatic.com/firebasejs/10.7.0/firebase-database.js');
                 const nicknameRef = ref(window.firebaseDB, `users/${this.currentUser}/nickname`);
                 await set(nicknameRef, nickname);
                 this.nickname = nickname;
+                sessionStorage.setItem('userNickname', nickname);
                 console.log('Pseudo sauvegardé:', nickname);
                 return true;
             }

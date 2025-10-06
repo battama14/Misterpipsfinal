@@ -147,7 +147,7 @@ window.addEventListener('load', function() {
                 }
                 
                 const uid = sessionStorage.getItem('firebaseUID');
-                const nickname = sessionStorage.getItem('userNickname') || 'Mobile User';
+                const nickname = sessionStorage.getItem('userNickname') || 'Utilisateur';
                 
                 const messageData = {
                     id: `msg_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,

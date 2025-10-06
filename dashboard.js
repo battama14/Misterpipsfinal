@@ -94,11 +94,7 @@ class SimpleTradingDashboard {
             this.currentUser = firebaseUID;
         }
         
-        // Initialiser le gestionnaire de pseudo unifié
-        if (window.nicknameManager) {
-            await window.nicknameManager.initialize();
-            this.nickname = await window.nicknameManager.ensureNickname();
-        }
+        // Ne pas initialiser automatiquement le pseudo
         
         await this.loadData();
         this.setupEventListeners();
@@ -369,8 +365,8 @@ class SimpleTradingDashboard {
                     isVIP: true,
                     plan: 'VIP',
                     email: sessionStorage.getItem('userEmail') || 'user@example.com',
-                    displayName: sessionStorage.getItem('userEmail')?.split('@')[0] || 'Trader',
-                    nickname: this.settings.nickname || sessionStorage.getItem('userEmail')?.split('@')[0] || 'Trader',
+                    displayName: sessionStorage.getItem('userNickname') || '',
+                    nickname: sessionStorage.getItem('userNickname') || '',
                     accounts: {
                         compte1: {
                             trades: this.trades,
@@ -382,9 +378,11 @@ class SimpleTradingDashboard {
                 });
                 
                 // Le pseudo est géré par le gestionnaire unifié
-                const currentNickname = window.nicknameManager ? window.nicknameManager.getNickname() : 'Trader';
-                const nicknameRef = ref(window.firebaseDB, `users/${this.currentUser}/nickname`);
-                await set(nicknameRef, currentNickname);
+                const currentNickname = sessionStorage.getItem('userNickname') || '';
+                if (currentNickname) {
+                    const nicknameRef = ref(window.firebaseDB, `users/${this.currentUser}/nickname`);
+                    await set(nicknameRef, currentNickname);
+                }
                 
                 const syncStatus = document.getElementById('syncStatus');
                 if (syncStatus) {
@@ -512,8 +510,8 @@ class SimpleTradingDashboard {
                     <input type="number" id="yearlyTargetInput" value="${this.settings.yearlyTarget}" step="10" min="10">
                 </div>
                 <div class="form-buttons">
-                    <button class="btn-submit" onclick="dashboard.saveSettings()">Sauvegarder</button>
-                    <button class="btn-secondary" onclick="dashboard.closeModal()">Annuler</button>
+                    <button class="btn-submit" onclick="window.dashboard.saveSettings()">Sauvegarder</button>
+                    <button class="btn-secondary" onclick="window.dashboard.closeModal()">Annuler</button>
                 </div>
             </div>
         `;

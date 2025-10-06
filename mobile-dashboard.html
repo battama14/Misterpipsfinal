@@ -55,14 +55,10 @@
                 
                 sessionStorage.setItem('firebaseUID', user.uid);
                 sessionStorage.setItem('userEmail', user.email);
-                console.log('🔥 Mobile Firebase prêt:', user.email);
+                // Ne jamais sauvegarder l'email comme pseudo
+                sessionStorage.removeItem('userNickname');
                 
-                // Charger le pseudo automatiquement
-                setTimeout(() => {
-                    if (window.loadMobileNickname) {
-                        window.loadMobileNickname();
-                    }
-                }, 500);
+                console.log('🔥 Mobile Firebase prêt:', user.email);
             }
         });
     </script>
@@ -267,6 +263,7 @@
                     <div class="setting-item">
                         <label>Pseudo</label>
                         <input type="text" id="mobileNickname" placeholder="Votre pseudo">
+                        <button id="saveNicknameBtn" class="btn-save" style="margin-top: 10px;">💾 Sauvegarder Pseudo</button>
                     </div>
                 </div>
                 
@@ -342,7 +339,7 @@
         <div class="modal-content" id="modalContent"></div>
     </div>
 
-    <script src="nickname-manager-unified.js"></script>
+
     <script src="extension-errors-fix.js"></script>
     <script src="pwa-permissions.js"></script>
     <script src="chat-notifications.js"></script>
@@ -351,14 +348,17 @@
     <script src="popup-fix.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
     <script src="mobile-trades.js"></script>
+    <script src="mobile-trade-modal-fix.js"></script>
+    <script src="simple-nickname.js"></script>
+    <script src="mobile-dashboard-sync.js"></script>
+    <script src="mobile-buttons-fix.js"></script>
+    <script src="mobile-final-sync.js"></script>
 
-    <script src="mobile-notifications-complete-fix.js"></script>
-    <script src="mobile-functions-check.js"></script>
     <script src="mobile-fix-urgent.js"></script>
-    <script src="mobile-nickname-cleanup.js"></script>
-    <script src="nickname-system-test.js"></script>
-    <script src="mobile-sync-test.js"></script>
     <script src="mobile-fixes-urgent.js"></script>
+    <script src="ranking-simple-fix.js"></script>
+    <script src="ranking-update-hook.js"></script>
+    <script src="force-ranking-update.js"></script>
     <script>
         // Variables globales
         let currentUser = null;
@@ -982,77 +982,7 @@
             calendar.innerHTML = html;
         }
         
-        // Système unifié de gestion des pseudos (compatible PC/Mobile)
-        class MobileNicknameManager {
-            constructor() {
-                this.currentUser = null;
-                this.nickname = null;
-            }
-
-            async initialize() {
-                const uid = sessionStorage.getItem('firebaseUID');
-                if (!uid || !window.firebaseDB) return null;
-                
-                this.currentUser = { uid };
-                await this.loadNickname();
-                return this.nickname;
-            }
-
-            async loadNickname() {
-                if (!this.currentUser || !window.firebaseDB) return null;
-                
-                try {
-                    const { ref, get } = await import('https://www.gstatic.com/firebasejs/10.7.0/firebase-database.js');
-                    const nicknameRef = ref(window.firebaseDB, `users/${this.currentUser.uid}/nickname`);
-                    const snapshot = await get(nicknameRef);
-                    
-                    if (snapshot.exists()) {
-                        this.nickname = snapshot.val();
-                        sessionStorage.setItem('userNickname', this.nickname);
-                        
-                        const nicknameInput = document.getElementById('mobileNickname');
-                        if (nicknameInput) nicknameInput.value = this.nickname;
-                        
-                        console.log('✅ Pseudo chargé:', this.nickname);
-                    } else {
-                        console.log('📝 Aucun pseudo sauvegardé');
-                    }
-                    
-                    return this.nickname;
-                } catch (error) {
-                    console.error('Erreur chargement pseudo:', error);
-                    return null;
-                }
-            }
-
-            async saveNickname(nickname) {
-                if (!this.currentUser || !nickname || !window.firebaseDB) return false;
-                
-                try {
-                    const { ref, set } = await import('https://www.gstatic.com/firebasejs/10.7.0/firebase-database.js');
-                    const nicknameRef = ref(window.firebaseDB, `users/${this.currentUser.uid}/nickname`);
-                    await set(nicknameRef, nickname);
-                    
-                    this.nickname = nickname;
-                    sessionStorage.setItem('userNickname', nickname);
-                    
-                    const nicknameInput = document.getElementById('mobileNickname');
-                    if (nicknameInput) nicknameInput.value = nickname;
-                    
-                    return true;
-                } catch (error) {
-                    console.error('Erreur sauvegarde pseudo:', error);
-                    return false;
-                }
-            }
-
-            getNickname() {
-                return this.nickname || sessionStorage.getItem('userNickname');
-            }
-        }
-
-        // Instance globale mobile
-        window.mobileNicknameManager = new MobileNicknameManager();
+        // Pseudo géré uniquement par simple-nickname.js
         
         // Fonction sauvegarde pseudo supprimée - gérée par mobile-fix-simple.js
         
@@ -1260,20 +1190,13 @@
                 // Pseudo géré par mobile-fix-simple.js
                 loadMobileChat();
 
-                // Initialiser le gestionnaire de pseudo unifié
-                setTimeout(() => {
-                    if (window.unifiedNicknameSync) {
-                        window.unifiedNicknameSync.initialize();
-                    }
-
-                    // Fix chat - initialiser l'écoute des messages
-                    if (window.firebaseDB && !window.chatInitialized) {
-                        loadMobileChat();
-                        window.chatInitialized = true;
-                        // Initialiser le reset du badge
-                        initMobileBadgeReset();
-                    }
-                }, 2000);
+                // Fix chat - initialiser l'écoute des messages
+                if (window.firebaseDB && !window.chatInitialized) {
+                    loadMobileChat();
+                    window.chatInitialized = true;
+                    // Initialiser le reset du badge
+                    initMobileBadgeReset();
+                }
             }, 1000);
         });
         

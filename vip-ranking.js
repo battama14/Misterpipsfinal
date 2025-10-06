@@ -112,11 +112,11 @@ class VIPRanking {
                             nickname = nicknameSnapshot.val();
                         } else {
                             // Fallback: userData.nickname ou email
-                            nickname = userData.nickname || userData.displayName || userData.email?.split('@')[0] || 'Trader VIP';
+                            nickname = userData.nickname || userData.displayName || 'Trader VIP';
                         }
                     } catch (error) {
                         console.error('Erreur récupération pseudo:', error);
-                        nickname = userData.nickname || userData.displayName || userData.email?.split('@')[0] || 'Trader VIP';
+                        nickname = userData.nickname || userData.displayName || 'Trader VIP';
                     }
 
                     rankings.push({
