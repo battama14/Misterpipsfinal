@@ -1,0 +1,345 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Test Boutons PC</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background: #0a0a0a;
+            color: white;
+            padding: 20px;
+            line-height: 1.6;
+        }
+        .test-section {
+            background: rgba(20, 20, 20, 0.8);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 10px;
+            padding: 20px;
+            margin: 20px 0;
+        }
+        .test-button {
+            background: linear-gradient(135deg, #00d4ff, #5b86e5);
+            color: white;
+            border: none;
+            padding: 12px 24px;
+            border-radius: 8px;
+            cursor: pointer;
+            margin: 8px;
+            font-weight: 600;
+        }
+        .test-button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(0, 212, 255, 0.3);
+        }
+        .status {
+            padding: 10px;
+            border-radius: 5px;
+            margin: 10px 0;
+        }
+        .status.success {
+            background: rgba(76, 175, 80, 0.2);
+            border: 1px solid #4caf50;
+            color: #4caf50;
+        }
+        .status.error {
+            background: rgba(244, 67, 54, 0.2);
+            border: 1px solid #f44336;
+            color: #f44336;
+        }
+        .status.warning {
+            background: rgba(255, 193, 7, 0.2);
+            border: 1px solid #ffc107;
+            color: #ffc107;
+        }
+        .problem-item {
+            background: rgba(255, 107, 107, 0.1);
+            border: 1px solid #ff6b6b;
+            border-radius: 8px;
+            padding: 15px;
+            margin: 10px 0;
+        }
+        .problem-title {
+            color: #ff6b6b;
+            font-weight: bold;
+            margin-bottom: 10px;
+        }
+        .solution {
+            background: rgba(76, 175, 80, 0.1);
+            border: 1px solid #4caf50;
+            border-radius: 8px;
+            padding: 10px;
+            margin-top: 10px;
+        }
+        .solution-title {
+            color: #4caf50;
+            font-weight: bold;
+            margin-bottom: 5px;
+        }
+    </style>
+</head>
+<body>
+    <h1>🔧 Test Corrections Boutons PC</h1>
+    
+    <div class="test-section">
+        <h2>📋 Problèmes Identifiés</h2>
+        
+        <div class="problem-item">
+            <div class="problem-title">❌ Problème 1: Bouton "Supprimer Compte" ne fonctionne pas</div>
+            <p>Le bouton pour supprimer un compte ne répond plus.</p>
+            <div class="solution">
+                <div class="solution-title">✅ Solution Appliquée:</div>
+                <p>Remplacement complet du bouton avec nouvelle fonction de suppression</p>
+            </div>
+        </div>
+        
+        <div class="problem-item">
+            <div class="problem-title">❌ Problème 2: Bouton "Supprimer" dans modal modification ne fonctionne pas</div>
+            <p>Dans l'historique des trades, le bouton modifier fonctionne mais le bouton supprimer dans le modal ne répond pas.</p>
+            <div class="solution">
+                <div class="solution-title">✅ Solution Appliquée:</div>
+                <p>Observer DOM + correction automatique des boutons dans les modales</p>
+            </div>
+        </div>
+        
+        <div class="problem-item">
+            <div class="problem-title">❌ Problème 3: Popup ajout compte revient indéfiniment</div>
+            <p>Quand on veut ajouter un compte, les popups reviennent en boucle même après avoir rempli les informations.</p>
+            <div class="solution">
+                <div class="solution-title">✅ Solution Appliquée:</div>
+                <p>Dialog personnalisé pour éviter les boucles de prompt()</p>
+            </div>
+        </div>
+    </div>
+    
+    <div class="test-section">
+        <h2>🧪 Tests des Corrections</h2>
+        <div id="testsStatus"></div>
+        <button class="test-button" onclick="runAllTests()">🔍 Tester Toutes les Corrections</button>
+    </div>
+    
+    <div class="test-section">
+        <h2>🗑️ Test Bouton Supprimer Compte</h2>
+        <div id="deleteAccountStatus"></div>
+        <button class="test-button" onclick="testDeleteAccountButton()">Test Bouton Supprimer Compte</button>
+        <button class="test-button" onclick="fixDeleteAccountButton()">Corriger Bouton</button>
+    </div>
+    
+    <div class="test-section">
+        <h2>✏️ Test Bouton Supprimer dans Modal</h2>
+        <div id="deleteTradeStatus"></div>
+        <button class="test-button" onclick="testDeleteTradeInModal()">Test Suppression Trade</button>
+        <button class="test-button" onclick="fixDeleteTradeButtons()">Corriger Boutons Modal</button>
+    </div>
+    
+    <div class="test-section">
+        <h2>➕ Test Ajout Compte</h2>
+        <div id="addAccountStatus"></div>
+        <button class="test-button" onclick="testAddAccountDialog()">Test Dialog Ajout</button>
+        <button class="test-button" onclick="fixAddAccountButton()">Corriger Bouton Ajout</button>
+    </div>
+    
+    <div class="test-section">
+        <h2>🔄 Actions Rapides</h2>
+        <button class="test-button" onclick="fixAllPCButtons()">🔧 Corriger Tous les Boutons</button>
+        <button class="test-button" onclick="goToDashboard()">📊 Aller au Dashboard</button>
+        <button class="test-button" onclick="reloadPage()">🔄 Recharger</button>
+    </div>
+    
+    <script>
+        function showStatus(elementId, message, type) {
+            const element = document.getElementById(elementId);
+            if (element) {
+                element.innerHTML = `<div class="status ${type}">${message}</div>`;
+            }
+        }
+        
+        function runAllTests() {
+            console.log('🧪 Lancement de tous les tests...');
+            
+            testDeleteAccountButton();
+            setTimeout(() => testDeleteTradeInModal(), 1000);
+            setTimeout(() => testAddAccountDialog(), 2000);
+            
+            setTimeout(() => {
+                showStatus('testsStatus', 'Tests terminés - Voir les résultats ci-dessous', 'success');
+            }, 3000);
+        }
+        
+        function testDeleteAccountButton() {
+            console.log('🗑️ Test bouton supprimer compte...');
+            
+            const deleteBtn = document.getElementById('deleteAccountBtn');
+            const hasButton = !!deleteBtn;
+            const hasCorrector = !!window.pcButtonsFixer;
+            const hasDashboard = !!window.dashboard;
+            
+            let status = '<h3>État Bouton Supprimer Compte:</h3>';
+            status += `<p>${hasButton ? '✅' : '❌'} Bouton présent: ${hasButton ? 'TROUVÉ' : 'MANQUANT'}</p>`;
+            status += `<p>${hasCorrector ? '✅' : '❌'} Script correcteur: ${hasCorrector ? 'CHARGÉ' : 'MANQUANT'}</p>`;
+            status += `<p>${hasDashboard ? '✅' : '❌'} Dashboard: ${hasDashboard ? 'DISPONIBLE' : 'MANQUANT'}</p>`;
+            
+            if (hasButton && hasButton.onclick) {
+                status += '<p>✅ Événement onclick: CONFIGURÉ</p>';
+            } else {
+                status += '<p>❌ Événement onclick: MANQUANT</p>';
+            }
+            
+            const allGood = hasButton && hasCorrector;
+            showStatus('deleteAccountStatus', status, allGood ? 'success' : 'error');
+            
+            console.log(allGood ? '✅ Bouton supprimer compte: OK' : '❌ Bouton supprimer compte: PROBLÈME');
+        }
+        
+        function testDeleteTradeInModal() {
+            console.log('✏️ Test suppression trade dans modal...');
+            
+            const hasCorrector = !!window.pcButtonsFixer;
+            const hasModal = !!document.getElementById('tradeModal');
+            const hasModalContent = !!document.getElementById('modalContent');
+            
+            let status = '<h3>État Suppression Trade Modal:</h3>';
+            status += `<p>${hasCorrector ? '✅' : '❌'} Script correcteur: ${hasCorrector ? 'CHARGÉ' : 'MANQUANT'}</p>`;
+            status += `<p>${hasModal ? '✅' : '❌'} Modal trade: ${hasModal ? 'PRÉSENTE' : 'MANQUANTE'}</p>`;
+            status += `<p>${hasModalContent ? '✅' : '❌'} Contenu modal: ${hasModalContent ? 'PRÉSENT' : 'MANQUANT'}</p>`;
+            
+            // Vérifier si l'observer est actif
+            if (hasCorrector && window.pcButtonsFixer.fixDeleteTradeInModal) {
+                status += '<p>✅ Observer DOM: ACTIF</p>';
+            } else {
+                status += '<p>❌ Observer DOM: INACTIF</p>';
+            }
+            
+            const allGood = hasCorrector && hasModal && hasModalContent;
+            showStatus('deleteTradeStatus', status, allGood ? 'success' : 'warning');
+            
+            console.log(allGood ? '✅ Suppression trade modal: OK' : '⚠️ Suppression trade modal: À VÉRIFIER');
+        }
+        
+        function testAddAccountDialog() {
+            console.log('➕ Test dialog ajout compte...');
+            
+            const addBtn = document.getElementById('addAccountBtn');
+            const hasButton = !!addBtn;
+            const hasCorrector = !!window.pcButtonsFixer;
+            
+            let status = '<h3>État Dialog Ajout Compte:</h3>';
+            status += `<p>${hasButton ? '✅' : '❌'} Bouton ajouter: ${hasButton ? 'TROUVÉ' : 'MANQUANT'}</p>`;
+            status += `<p>${hasCorrector ? '✅' : '❌'} Script correcteur: ${hasCorrector ? 'CHARGÉ' : 'MANQUANT'}</p>`;
+            
+            if (hasButton && hasButton.onclick) {
+                status += '<p>✅ Événement onclick: CONFIGURÉ</p>';
+            } else {
+                status += '<p>❌ Événement onclick: MANQUANT</p>';
+            }
+            
+            // Test de la fonction de dialog
+            if (hasCorrector && typeof window.pcButtonsFixer.showAddAccountDialog === 'function') {
+                status += '<p>✅ Fonction dialog: DISPONIBLE</p>';
+            } else {
+                status += '<p>❌ Fonction dialog: MANQUANTE</p>';
+            }
+            
+            const allGood = hasButton && hasCorrector;
+            showStatus('addAccountStatus', status, allGood ? 'success' : 'error');
+            
+            console.log(allGood ? '✅ Dialog ajout compte: OK' : '❌ Dialog ajout compte: PROBLÈME');
+        }
+        
+        function fixDeleteAccountButton() {
+            console.log('🔧 Correction bouton supprimer compte...');
+            
+            if (window.pcButtonsFixer) {
+                window.pcButtonsFixer.fixDeleteAccountButton();
+                console.log('✅ Correction lancée');
+                setTimeout(() => testDeleteAccountButton(), 500);
+            } else {
+                alert('❌ Script correcteur non chargé');
+            }
+        }
+        
+        function fixDeleteTradeButtons() {
+            console.log('🔧 Correction boutons suppression trade...');
+            
+            if (window.pcButtonsFixer) {
+                window.pcButtonsFixer.fixDeleteTradeInModal();
+                console.log('✅ Correction lancée');
+                setTimeout(() => testDeleteTradeInModal(), 500);
+            } else {
+                alert('❌ Script correcteur non chargé');
+            }
+        }
+        
+        function fixAddAccountButton() {
+            console.log('🔧 Correction bouton ajout compte...');
+            
+            if (window.pcButtonsFixer) {
+                window.pcButtonsFixer.fixAddAccountPopup();
+                console.log('✅ Correction lancée');
+                setTimeout(() => testAddAccountDialog(), 500);
+            } else {
+                alert('❌ Script correcteur non chargé');
+            }
+        }
+        
+        function fixAllPCButtons() {
+            console.log('🔧 Correction de tous les boutons PC...');
+            
+            if (window.pcButtonsFixer) {
+                window.pcButtonsFixer.fixAllButtons();
+                console.log('✅ Toutes les corrections lancées');
+                
+                setTimeout(() => {
+                    runAllTests();
+                }, 1000);
+            } else if (window.fixPCButtons) {
+                window.fixPCButtons();
+                console.log('✅ Correction via fonction globale');
+                
+                setTimeout(() => {
+                    runAllTests();
+                }, 1000);
+            } else {
+                alert('❌ Scripts correcteurs non chargés');
+            }
+        }
+        
+        function goToDashboard() {
+            console.log('📊 Redirection vers dashboard...');
+            window.location.href = 'dashboard.html';
+        }
+        
+        function reloadPage() {
+            console.log('🔄 Rechargement de la page...');
+            window.location.reload();
+        }
+        
+        // Test automatique au chargement
+        window.addEventListener('load', () => {
+            setTimeout(() => {
+                console.log('🚀 Test automatique au chargement...');
+                runAllTests();
+            }, 2000);
+        });
+        
+        // Vérifier périodiquement si les scripts sont chargés
+        let checkInterval = setInterval(() => {
+            if (window.pcButtonsFixer) {
+                console.log('✅ Script correcteur détecté');
+                clearInterval(checkInterval);
+                
+                // Relancer les tests
+                setTimeout(() => {
+                    runAllTests();
+                }, 500);
+            }
+        }, 1000);
+        
+        // Arrêter la vérification après 10 secondes
+        setTimeout(() => {
+            clearInterval(checkInterval);
+        }, 10000);
+    </script>
+</body>
+</html>

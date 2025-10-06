@@ -1,0 +1,514 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Test Notifications Mobile</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background: #0a0a0a;
+            color: white;
+            padding: 20px;
+            line-height: 1.6;
+        }
+        .test-section {
+            background: rgba(20, 20, 20, 0.8);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 10px;
+            padding: 20px;
+            margin: 20px 0;
+        }
+        .test-button {
+            background: linear-gradient(135deg, #00d4ff, #5b86e5);
+            color: white;
+            border: none;
+            padding: 12px 24px;
+            border-radius: 8px;
+            cursor: pointer;
+            margin: 8px;
+            font-weight: 600;
+            width: 100%;
+            max-width: 300px;
+        }
+        .test-button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(0, 212, 255, 0.3);
+        }
+        .status {
+            padding: 10px;
+            border-radius: 5px;
+            margin: 10px 0;
+        }
+        .status.success {
+            background: rgba(76, 175, 80, 0.2);
+            border: 1px solid #4caf50;
+            color: #4caf50;
+        }
+        .status.error {
+            background: rgba(244, 67, 54, 0.2);
+            border: 1px solid #f44336;
+            color: #f44336;
+        }
+        .status.warning {
+            background: rgba(255, 193, 7, 0.2);
+            border: 1px solid #ffc107;
+            color: #ffc107;
+        }
+        .problem-item {
+            background: rgba(255, 107, 107, 0.1);
+            border: 1px solid #ff6b6b;
+            border-radius: 8px;
+            padding: 15px;
+            margin: 10px 0;
+        }
+        .problem-title {
+            color: #ff6b6b;
+            font-weight: bold;
+            margin-bottom: 10px;
+        }
+        .solution {
+            background: rgba(76, 175, 80, 0.1);
+            border: 1px solid #4caf50;
+            border-radius: 8px;
+            padding: 10px;
+            margin-top: 10px;
+        }
+        .solution-title {
+            color: #4caf50;
+            font-weight: bold;
+            margin-bottom: 5px;
+        }
+        .badge-demo {
+            position: relative;
+            display: inline-block;
+            background: #333;
+            padding: 10px 20px;
+            border-radius: 25px;
+            margin: 10px;
+        }
+        .badge-demo .nav-badge {
+            position: absolute;
+            top: -5px;
+            right: -5px;
+            background: #ff3b30;
+            color: white;
+            border-radius: 50%;
+            width: 20px;
+            height: 20px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 12px;
+            font-weight: bold;
+        }
+    </style>
+</head>
+<body>
+    <h1>🔔 Test Notifications Mobile</h1>
+    
+    <div class="test-section">
+        <h2>📋 Problèmes Identifiés</h2>
+        
+        <div class="problem-item">
+            <div class="problem-title">❌ Problème 1: Badge ne se remet pas à zéro</div>
+            <p>L'icône affiche le nombre de messages reçus mais ne se remet pas à zéro quand on lit les messages.</p>
+            <div class="solution">
+                <div class="solution-title">✅ Solution Appliquée:</div>
+                <p>Observer les changements de section + reset automatique quand on va sur le chat</p>
+            </div>
+        </div>
+        
+        <div class="problem-item">
+            <div class="problem-title">❌ Problème 2: Bannières ne s'affichent pas toujours</div>
+            <p>Les notifications push ne s'affichent pas de manière fiable.</p>
+            <div class="solution">
+                <div class="solution-title">✅ Solution Appliquée:</div>
+                <p>Système de bannières robuste avec gestion d'erreurs et fallback</p>
+            </div>
+        </div>
+        
+        <div class="problem-item">
+            <div class="problem-title">❌ Problème 3: Pas de son de notification</div>
+            <p>Les notifications n'émettent pas de son.</p>
+            <div class="solution">
+                <div class="solution-title">✅ Solution Appliquée:</div>
+                <p>Système audio amélioré avec contexte audio réutilisable et fallback</p>
+            </div>
+        </div>
+    </div>
+    
+    <div class="test-section">
+        <h2>🧪 Tests des Notifications</h2>
+        <div id="notificationsStatus"></div>
+        <button class="test-button" onclick="runAllNotificationTests()">🔍 Tester Toutes les Notifications</button>
+    </div>
+    
+    <div class="test-section">
+        <h2>🔔 Test Badge</h2>
+        <div id="badgeStatus"></div>
+        <div class="badge-demo" id="badgeDemo">
+            💬 Chat
+            <div class="nav-badge" id="demoBadge">3</div>
+        </div>
+        <button class="test-button" onclick="testBadgeIncrement()">➕ Incrémenter Badge</button>
+        <button class="test-button" onclick="testBadgeReset()">🔄 Reset Badge</button>
+    </div>
+    
+    <div class="test-section">
+        <h2>🔊 Test Sons</h2>
+        <div id="soundStatus"></div>
+        <button class="test-button" onclick="testNotificationSound()">🔊 Test Son</button>
+        <button class="test-button" onclick="testVibration()">📳 Test Vibration</button>
+    </div>
+    
+    <div class="test-section">
+        <h2>📢 Test Bannières</h2>
+        <div id="bannerStatus"></div>
+        <button class="test-button" onclick="requestPermissions()">🔓 Demander Permissions</button>
+        <button class="test-button" onclick="testNotificationBanner()">📢 Test Bannière</button>
+    </div>
+    
+    <div class="test-section">
+        <h2>🔄 Actions Rapides</h2>
+        <button class="test-button" onclick="fixAllNotifications()">🔧 Corriger Tout</button>
+        <button class="test-button" onclick="goToMobileDashboard()">📱 Dashboard Mobile</button>
+        <button class="test-button" onclick="clearAllBadges()">🗑️ Effacer Badges</button>
+    </div>
+    
+    <script>
+        let testBadgeCount = 0;
+        
+        function showStatus(elementId, message, type) {
+            const element = document.getElementById(elementId);
+            if (element) {
+                element.innerHTML = `<div class="status ${type}">${message}</div>`;
+            }
+        }
+        
+        function runAllNotificationTests() {
+            console.log('🧪 Test complet notifications...');
+            
+            testBadgeSystem();
+            setTimeout(() => testSoundSystem(), 1000);
+            setTimeout(() => testBannerSystem(), 2000);
+            
+            setTimeout(() => {
+                showStatus('notificationsStatus', 'Tests terminés - Voir les résultats ci-dessous', 'success');
+            }, 3000);
+        }
+        
+        function testBadgeSystem() {
+            console.log('🔔 Test système badge...');
+            
+            const hasCorrector = !!window.mobileNotificationsCompleteFix;
+            const hasResetFunction = typeof window.resetUnreadCount === 'function';
+            const hasBadgeFunction = typeof window.resetMobileBadge === 'function';
+            
+            let status = '<h3>État Système Badge:</h3>';
+            status += `<p>${hasCorrector ? '✅' : '❌'} Script correcteur: ${hasCorrector ? 'CHARGÉ' : 'MANQUANT'}</p>`;
+            status += `<p>${hasResetFunction ? '✅' : '❌'} Fonction resetUnreadCount: ${hasResetFunction ? 'DISPONIBLE' : 'MANQUANTE'}</p>`;
+            status += `<p>${hasBadgeFunction ? '✅' : '❌'} Fonction resetMobileBadge: ${hasBadgeFunction ? 'DISPONIBLE' : 'MANQUANTE'}</p>`;
+            
+            // Test PWA badge
+            const hasPWABadge = 'setAppBadge' in navigator;
+            status += `<p>${hasPWABadge ? '✅' : '❌'} Badge PWA: ${hasPWABadge ? 'SUPPORTÉ' : 'NON SUPPORTÉ'}</p>`;
+            
+            const allGood = hasCorrector && (hasResetFunction || hasBadgeFunction);
+            showStatus('badgeStatus', status, allGood ? 'success' : 'error');
+            
+            console.log(allGood ? '✅ Système badge: OK' : '❌ Système badge: PROBLÈME');
+        }
+        
+        function testSoundSystem() {
+            console.log('🔊 Test système son...');
+            
+            const hasAudioContext = !!(window.AudioContext || window.webkitAudioContext);
+            const hasCorrector = !!window.mobileNotificationsCompleteFix;
+            
+            let status = '<h3>État Système Son:</h3>';
+            status += `<p>${hasAudioContext ? '✅' : '❌'} AudioContext: ${hasAudioContext ? 'SUPPORTÉ' : 'NON SUPPORTÉ'}</p>`;
+            status += `<p>${hasCorrector ? '✅' : '❌'} Script correcteur: ${hasCorrector ? 'CHARGÉ' : 'MANQUANT'}</p>`;
+            
+            // Vérifier les paramètres
+            try {
+                const settings = JSON.parse(localStorage.getItem('mobileNotificationSettings')) || {};
+                status += `<p>⚙️ Son activé: ${settings.sound ? 'OUI' : 'NON'}</p>`;
+            } catch (e) {
+                status += '<p>⚠️ Paramètres son: NON CONFIGURÉS</p>';
+            }
+            
+            const allGood = hasAudioContext && hasCorrector;
+            showStatus('soundStatus', status, allGood ? 'success' : 'warning');
+            
+            console.log(allGood ? '✅ Système son: OK' : '⚠️ Système son: À VÉRIFIER');
+        }
+        
+        function testBannerSystem() {
+            console.log('📢 Test système bannières...');
+            
+            const hasNotifications = 'Notification' in window;
+            const permission = hasNotifications ? Notification.permission : 'unsupported';
+            const hasCorrector = !!window.mobileNotificationsCompleteFix;
+            
+            let status = '<h3>État Système Bannières:</h3>';
+            status += `<p>${hasNotifications ? '✅' : '❌'} Support navigateur: ${hasNotifications ? 'SUPPORTÉ' : 'NON SUPPORTÉ'}</p>`;
+            status += `<p>🔔 Permission: ${permission}</p>`;
+            status += `<p>${hasCorrector ? '✅' : '❌'} Script correcteur: ${hasCorrector ? 'CHARGÉ' : 'MANQUANT'}</p>`;
+            
+            // Vérifier les paramètres
+            try {
+                const settings = JSON.parse(localStorage.getItem('mobileNotificationSettings')) || {};
+                status += `<p>⚙️ Push activé: ${settings.push ? 'OUI' : 'NON'}</p>`;
+                status += `<p>⚙️ Vibration activée: ${settings.vibrate ? 'OUI' : 'NON'}</p>`;
+            } catch (e) {
+                status += '<p>⚠️ Paramètres push: NON CONFIGURÉS</p>';
+            }
+            
+            const allGood = hasNotifications && hasCorrector && permission === 'granted';
+            showStatus('bannerStatus', status, allGood ? 'success' : 'warning');
+            
+            console.log(allGood ? '✅ Système bannières: OK' : '⚠️ Système bannières: PERMISSIONS REQUISES');
+        }
+        
+        function testBadgeIncrement() {
+            console.log('➕ Test incrémentation badge...');
+            
+            testBadgeCount++;
+            
+            // Test badge démo
+            const demoBadge = document.getElementById('demoBadge');
+            if (demoBadge) {
+                demoBadge.textContent = testBadgeCount;
+            }
+            
+            // Test badge PWA
+            if ('setAppBadge' in navigator) {
+                navigator.setAppBadge(testBadgeCount);
+                console.log('✅ Badge PWA mis à jour:', testBadgeCount);
+            }
+            
+            // Test via correcteur
+            if (window.mobileNotificationsCompleteFix) {
+                window.mobileNotificationsCompleteFix.incrementBadge();
+                console.log('✅ Badge via correcteur incrémenté');
+            }
+        }
+        
+        function testBadgeReset() {
+            console.log('🔄 Test reset badge...');
+            
+            testBadgeCount = 0;
+            
+            // Reset badge démo
+            const demoBadge = document.getElementById('demoBadge');
+            if (demoBadge) {
+                demoBadge.textContent = '0';
+                setTimeout(() => {
+                    demoBadge.style.display = 'none';
+                }, 1000);
+                setTimeout(() => {
+                    demoBadge.style.display = 'flex';
+                }, 2000);
+            }
+            
+            // Reset badge PWA
+            if ('clearAppBadge' in navigator) {
+                navigator.clearAppBadge();
+                console.log('✅ Badge PWA reset');
+            }
+            
+            // Reset via correcteur
+            if (window.resetUnreadCount) {
+                window.resetUnreadCount();
+                console.log('✅ Badge via resetUnreadCount reset');
+            } else if (window.resetMobileBadge) {
+                window.resetMobileBadge();
+                console.log('✅ Badge via resetMobileBadge reset');
+            }
+        }
+        
+        function testNotificationSound() {
+            console.log('🔊 Test son notification...');
+            
+            if (window.mobileNotificationsCompleteFix && window.mobileNotificationsCompleteFix.playSound) {
+                window.mobileNotificationsCompleteFix.playSound();
+                console.log('✅ Son via correcteur joué');
+            } else {
+                // Fallback
+                try {
+                    const audioContext = new (window.AudioContext || window.webkitAudioContext)();
+                    const oscillator = audioContext.createOscillator();
+                    const gainNode = audioContext.createGain();
+
+                    oscillator.connect(gainNode);
+                    gainNode.connect(audioContext.destination);
+
+                    oscillator.frequency.setValueAtTime(800, audioContext.currentTime);
+                    oscillator.frequency.setValueAtTime(600, audioContext.currentTime + 0.1);
+
+                    gainNode.gain.setValueAtTime(0.3, audioContext.currentTime);
+                    gainNode.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + 0.5);
+
+                    oscillator.start(audioContext.currentTime);
+                    oscillator.stop(audioContext.currentTime + 0.5);
+
+                    console.log('✅ Son fallback joué');
+                } catch (error) {
+                    console.log('❌ Erreur son:', error);
+                    alert('❌ Impossible de jouer le son');
+                }
+            }
+        }
+        
+        function testVibration() {
+            console.log('📳 Test vibration...');
+            
+            if ('vibrate' in navigator) {
+                navigator.vibrate([300, 100, 300]);
+                console.log('✅ Vibration testée');
+            } else {
+                console.log('❌ Vibration non supportée');
+                alert('❌ Vibration non supportée sur cet appareil');
+            }
+        }
+        
+        async function requestPermissions() {
+            console.log('🔓 Demande permissions...');
+            
+            if (!('Notification' in window)) {
+                alert('❌ Notifications non supportées');
+                return;
+            }
+            
+            try {
+                const permission = await Notification.requestPermission();
+                console.log('🔔 Permission:', permission);
+                
+                if (permission === 'granted') {
+                    alert('✅ Permissions accordées !');
+                    setTimeout(() => testBannerSystem(), 500);
+                } else {
+                    alert('❌ Permissions refusées');
+                }
+            } catch (error) {
+                console.error('Erreur permissions:', error);
+                alert('❌ Erreur: ' + error.message);
+            }
+        }
+        
+        function testNotificationBanner() {
+            console.log('📢 Test bannière notification...');
+            
+            if (Notification.permission !== 'granted') {
+                alert('❌ Permissions requises - Cliquez "Demander Permissions" d\'abord');
+                return;
+            }
+            
+            try {
+                const testNotif = new Notification('🧪 Test Notification', {
+                    body: 'Ceci est un test de bannière de notification mobile',
+                    icon: './Misterpips.jpg',
+                    badge: './Misterpips.jpg',
+                    tag: 'test-notification',
+                    requireInteraction: false,
+                    silent: false
+                });
+                
+                // Son de test
+                testNotificationSound();
+                
+                // Vibration de test
+                if ('vibrate' in navigator) {
+                    navigator.vibrate([200, 100, 200]);
+                }
+                
+                testNotif.onclick = () => {
+                    console.log('🔔 Clic test notification');
+                    testNotif.close();
+                };
+                
+                setTimeout(() => {
+                    try {
+                        testNotif.close();
+                    } catch (e) {}
+                }, 5000);
+                
+                console.log('✅ Bannière test affichée');
+                
+            } catch (error) {
+                console.error('❌ Erreur bannière test:', error);
+                alert('❌ Erreur: ' + error.message);
+            }
+        }
+        
+        function fixAllNotifications() {
+            console.log('🔧 Correction complète notifications...');
+            
+            if (window.mobileNotificationsCompleteFix) {
+                window.mobileNotificationsCompleteFix.fixNotifications();
+                console.log('✅ Corrections appliquées');
+                
+                setTimeout(() => {
+                    runAllNotificationTests();
+                }, 1000);
+            } else {
+                alert('❌ Script correcteur non chargé');
+            }
+        }
+        
+        function goToMobileDashboard() {
+            console.log('📱 Redirection dashboard mobile...');
+            window.location.href = 'mobile-dashboard.html';
+        }
+        
+        function clearAllBadges() {
+            console.log('🗑️ Effacement tous badges...');
+            
+            testBadgeCount = 0;
+            
+            // Badge démo
+            const demoBadge = document.getElementById('demoBadge');
+            if (demoBadge) {
+                demoBadge.textContent = '0';
+            }
+            
+            // Badge PWA
+            if ('clearAppBadge' in navigator) {
+                navigator.clearAppBadge();
+            }
+            
+            // Via correcteur
+            if (window.resetUnreadCount) {
+                window.resetUnreadCount();
+            }
+            
+            console.log('✅ Tous badges effacés');
+        }
+        
+        // Test automatique au chargement
+        window.addEventListener('load', () => {
+            setTimeout(() => {
+                console.log('🚀 Test automatique notifications...');
+                runAllNotificationTests();
+            }, 2000);
+        });
+        
+        // Vérifier périodiquement le correcteur
+        let checkInterval = setInterval(() => {
+            if (window.mobileNotificationsCompleteFix) {
+                console.log('✅ Correcteur notifications détecté');
+                clearInterval(checkInterval);
+                
+                setTimeout(() => {
+                    runAllNotificationTests();
+                }, 500);
+            }
+        }, 1000);
+        
+        setTimeout(() => {
+            clearInterval(checkInterval);
+        }, 10000);
+    </script>
+</body>
+</html>
