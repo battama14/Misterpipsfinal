@@ -220,16 +220,82 @@ function setupBadgeReset() {
     }
 }
 
+// Demander permission notifications
+async function requestNotificationPermission() {
+    if (!('Notification' in window)) {
+        alert('❌ Votre navigateur ne supporte pas les notifications');
+        return false;
+    }
+
+    if (Notification.permission === 'granted') {
+        alert('✅ Les notifications sont déjà activées !');
+        // Afficher une notification de test
+        new Notification('🔔 Notifications actives', {
+            body: 'Vous recevrez les messages du chat VIP',
+            icon: './Misterpips.jpg',
+            badge: './Misterpips.jpg'
+        });
+        return true;
+    }
+
+    if (Notification.permission === 'denied') {
+        alert('❌ Les notifications sont bloquées.\n\nPour les activer:\n1. Cliquez sur l\'icône 🔒 dans la barre d\'adresse\n2. Autorisez les notifications\n3. Rechargez la page');
+        return false;
+    }
+
+    try {
+        const permission = await Notification.requestPermission();
+        console.log('🔔 Permission notifications:', permission);
+
+        if (permission === 'granted') {
+            // Sauvegarder les paramètres
+            const settings = {
+                sound: document.getElementById('mobileSoundToggle')?.checked ?? true,
+                push: true,
+                vibrate: document.getElementById('mobileVibrateToggle')?.checked ?? true
+            };
+            localStorage.setItem('mobileNotificationSettings', JSON.stringify(settings));
+
+            // Notification de confirmation
+            new Notification('✅ Notifications activées !', {
+                body: 'Vous recevrez maintenant les messages du chat VIP',
+                icon: './Misterpips.jpg',
+                badge: './Misterpips.jpg',
+                vibrate: settings.vibrate ? [200, 100, 200] : [],
+                silent: !settings.sound
+            });
+
+            alert('✅ Notifications activées avec succès !');
+            return true;
+        } else {
+            alert('❌ Permission refusée. Vous ne recevrez pas de notifications.');
+            return false;
+        }
+    } catch (error) {
+        console.error('❌ Erreur demande permission:', error);
+        alert('❌ Erreur lors de l\'activation des notifications');
+        return false;
+    }
+}
+
 // Initialiser au chargement
 document.addEventListener('DOMContentLoaded', () => {
     setTimeout(() => {
         initChatNotifications();
         setupBadgeReset();
+        
+        // Attacher le bouton d'activation des notifications
+        const activateBtn = document.getElementById('activateNotificationsBtn');
+        if (activateBtn) {
+            activateBtn.addEventListener('click', requestNotificationPermission);
+            console.log('✅ Bouton activation notifications attaché');
+        }
     }, 3000);
 });
 
 // Exposer fonctions
 window.resetChatBadge = resetBadge;
 window.incrementChatBadge = incrementBadge;
+window.requestNotificationPermission = requestNotificationPermission;
 
 console.log('🔔 Système notifications chat chargé');

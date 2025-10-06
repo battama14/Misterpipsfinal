@@ -1486,6 +1486,60 @@ class SimpleTradingDashboard {
         alert('Fonction de clôture manuelle - À implémenter');
     }
 
+    async closeTrade(index, closeType) {
+        const trade = this.trades[index];
+        if (!trade || trade.status !== 'open') {
+            console.error('Trade invalide ou déjà fermé');
+            return;
+        }
+        
+        let closePrice = 0;
+        let pnl = 0;
+        
+        // Déterminer le prix de clôture selon le type
+        switch(closeType) {
+            case 'TP':
+                closePrice = parseFloat(trade.takeProfit);
+                trade.status = 'tp';
+                break;
+            case 'SL':
+                closePrice = parseFloat(trade.stopLoss);
+                trade.status = 'sl';
+                break;
+            case 'BE':
+                closePrice = parseFloat(trade.entryPoint);
+                trade.status = 'be';
+                break;
+            default:
+                console.error('Type de clôture invalide');
+                return;
+        }
+        
+        // Calculer le P&L
+        trade.closePrice = closePrice;
+        trade.closeDate = new Date().toISOString().split('T')[0];
+        
+        // Utiliser la fonction calculatePnL existante
+        pnl = this.calculatePnL(trade);
+        trade.pnl = pnl;
+        
+        // Sauvegarder
+        await this.saveData();
+        
+        // Mettre à jour l'affichage
+        this.updateStats();
+        this.renderTradesTable();
+        this.renderCalendar();
+        this.updateCharts();
+        
+        // Fermer la modale
+        this.closeModal();
+        
+        // Notification
+        const emoji = closeType === 'TP' ? '✅' : closeType === 'SL' ? '❌' : '⚖️';
+        this.showNotification(`${emoji} Trade clôturé en ${closeType}: ${pnl > 0 ? '+' : ''}$${pnl.toFixed(2)}`);
+    }
+
     closeFullscreen() {
         const modal = document.getElementById('fullscreenModal');
         if (modal) modal.style.display = 'none';

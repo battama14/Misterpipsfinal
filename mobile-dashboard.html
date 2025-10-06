@@ -879,29 +879,37 @@
             // Récupérer les trades de toutes les sources possibles
             let trades = [];
             
-            // Essayer différentes sources de données
-            const sources = [
-                localStorage.getItem('trades'),
-                localStorage.getItem(`trades_${currentMobileAccount}`),
-                localStorage.getItem('mobileTradesData'),
-                sessionStorage.getItem('trades')
-            ];
-            
-            for (const source of sources) {
-                if (source) {
-                    try {
-                        const data = JSON.parse(source);
-                        if (Array.isArray(data) && data.length > 0) {
-                            trades = data;
-                            break;
-                        }
-                    } catch (e) {}
-                }
+            // Priorité 1: mobileData.trades depuis mobile-trades.js
+            if (window.mobileData && Array.isArray(window.mobileData.trades)) {
+                trades = window.mobileData.trades;
+                console.log('📅 Calendrier: Utilisation de mobileData.trades', trades.length);
             }
-            
-            // Si window.mobileTradesData existe, l'utiliser
-            if (window.mobileTradesData && Array.isArray(window.mobileTradesData)) {
+            // Priorité 2: window.mobileTradesData
+            else if (window.mobileTradesData && Array.isArray(window.mobileTradesData)) {
                 trades = window.mobileTradesData;
+                console.log('📅 Calendrier: Utilisation de mobileTradesData', trades.length);
+            }
+            // Priorité 3: Essayer différentes sources de données
+            else {
+                const sources = [
+                    localStorage.getItem('trades'),
+                    localStorage.getItem(`trades_${currentMobileAccount}`),
+                    localStorage.getItem('mobileTradesData'),
+                    sessionStorage.getItem('trades')
+                ];
+                
+                for (const source of sources) {
+                    if (source) {
+                        try {
+                            const data = JSON.parse(source);
+                            if (Array.isArray(data) && data.length > 0) {
+                                trades = data;
+                                console.log('📅 Calendrier: Utilisation de localStorage', trades.length);
+                                break;
+                            }
+                        } catch (e) {}
+                    }
+                }
             }
             
             const tradesData = {};

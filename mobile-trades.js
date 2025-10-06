@@ -4,6 +4,9 @@ let mobileData = {
     currentUser: null
 };
 
+// Exposer mobileData globalement pour le calendrier
+window.mobileData = mobileData;
+
 // Attendre Firebase avec toutes les fonctions
 async function waitForFirebase() {
     let attempts = 0;
@@ -311,6 +314,90 @@ function updateMobileStats() {
         window.updateMobileCharts();
     }
 }
+
+// Clôturer un trade mobile
+async function closeTrade(index, closeType) {
+    const trade = mobileData.trades[index];
+    if (!trade || trade.status !== 'open') {
+        console.error('Trade invalide ou déjà fermé');
+        return;
+    }
+    
+    let closePrice = 0;
+    let pnl = 0;
+    
+    // Déterminer le prix de clôture selon le type
+    switch(closeType.toLowerCase()) {
+        case 'tp':
+            closePrice = parseFloat(trade.takeProfit);
+            trade.status = 'closed';
+            trade.result = 'tp';
+            break;
+        case 'sl':
+            closePrice = parseFloat(trade.stopLoss);
+            trade.status = 'closed';
+            trade.result = 'sl';
+            break;
+        case 'be':
+            closePrice = parseFloat(trade.entryPoint);
+            trade.status = 'closed';
+            trade.result = 'be';
+            break;
+        default:
+            console.error('Type de clôture invalide');
+            return;
+    }
+    
+    // Calculer le P&L
+    trade.closePrice = closePrice;
+    trade.closeDate = new Date().toISOString().split('T')[0];
+    
+    const entryPoint = parseFloat(trade.entryPoint);
+    const lotSize = parseFloat(trade.lotSize);
+    const priceDiff = closePrice - entryPoint;
+    
+    // Calcul selon la paire
+    if (trade.currency.includes('JPY')) {
+        pnl = (priceDiff * 100) * lotSize * 10;
+    } else if (trade.currency === 'XAU/USD' || trade.currency === 'BTC/USD') {
+        pnl = priceDiff * lotSize * 100;
+    } else {
+        pnl = (priceDiff * 10000) * lotSize * 10;
+    }
+    
+    trade.pnl = pnl;
+    
+    // Sauvegarder
+    await saveMobileTrades();
+    
+    // Mettre à jour l'affichage
+    updateMobileTradesList();
+    updateMobileStats();
+    
+    // Notification
+    const emoji = closeType === 'tp' ? '✅' : closeType === 'sl' ? '❌' : '⚖️';
+    alert(`${emoji} Trade clôturé en ${closeType.toUpperCase()}: ${pnl > 0 ? '+' : ''}$${pnl.toFixed(2)}`);
+}
+
+// Supprimer un trade mobile
+async function deleteTrade(index) {
+    if (!confirm('Supprimer ce trade ?')) return;
+    
+    mobileData.trades.splice(index, 1);
+    
+    // Sauvegarder
+    await saveMobileTrades();
+    
+    // Mettre à jour l'affichage
+    updateMobileTradesList();
+    updateMobileStats();
+    
+    alert('✅ Trade supprimé');
+}
+
+// Exposer les fonctions globalement
+window.closeTrade = closeTrade;
+window.deleteTrade = deleteTrade;
 
 // Modal
 function showTradeModal() {
