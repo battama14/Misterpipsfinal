@@ -22,7 +22,13 @@ class iMessageChat {
     }
     
     async init() {
-        this.nickname = await this.getNickname();
+        // Utiliser le gestionnaire unifié pour le pseudo (sans forcer la demande)
+        if (window.nicknameManager) {
+            await window.nicknameManager.initialize();
+            this.nickname = window.nicknameManager.getNickname() || 'Trader VIP';
+        } else {
+            this.nickname = await this.getNickname();
+        }
         this.createChatUI();
         this.setupEventListeners();
         this.loadMessages();
@@ -554,6 +560,16 @@ class iMessageChat {
     }
     
     async saveNickname(nickname) {
+        // Utiliser le gestionnaire unifié
+        if (window.nicknameManager) {
+            const success = await window.nicknameManager.saveNickname(nickname);
+            if (success) {
+                this.nickname = nickname;
+            }
+            return success;
+        }
+        
+        // Fallback pour compatibilité
         try {
             if (window.firebaseDB) {
                 const { ref, set } = await import('https://www.gstatic.com/firebasejs/10.7.0/firebase-database.js');
@@ -561,17 +577,12 @@ class iMessageChat {
                 await set(nicknameRef, nickname);
                 this.nickname = nickname;
                 console.log('Pseudo sauvegardé:', nickname);
-                
-                // Mettre à jour le classement VIP
-                if (window.vipRanking) {
-                    setTimeout(() => {
-                        window.vipRanking.loadRanking();
-                    }, 1000);
-                }
+                return true;
             }
         } catch (error) {
             console.error('Erreur sauvegarde pseudo:', error);
         }
+        return false;
     }
     
     async loadMessages() {

@@ -94,9 +94,11 @@ class SimpleTradingDashboard {
             this.currentUser = firebaseUID;
         }
         
-        // Initialiser le gestionnaire de pseudo
-        await window.nicknameManager.initialize();
-        await window.nicknameManager.ensureNickname();
+        // Initialiser le gestionnaire de pseudo unifié
+        if (window.nicknameManager) {
+            await window.nicknameManager.initialize();
+            this.nickname = await window.nicknameManager.ensureNickname();
+        }
         
         await this.loadData();
         this.setupEventListeners();
@@ -379,9 +381,10 @@ class SimpleTradingDashboard {
                     lastUpdated: new Date().toISOString()
                 });
                 
-                // Sauvegarder le pseudo séparément
+                // Le pseudo est géré par le gestionnaire unifié
+                const currentNickname = window.nicknameManager ? window.nicknameManager.getNickname() : 'Trader';
                 const nicknameRef = ref(window.firebaseDB, `users/${this.currentUser}/nickname`);
-                await set(nicknameRef, this.settings.nickname || sessionStorage.getItem('userEmail')?.split('@')[0] || 'Trader');
+                await set(nicknameRef, currentNickname);
                 
                 const syncStatus = document.getElementById('syncStatus');
                 if (syncStatus) {

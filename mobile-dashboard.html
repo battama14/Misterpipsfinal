@@ -59,8 +59,8 @@
                 
                 // Charger le pseudo automatiquement
                 setTimeout(() => {
-                    if (window.loadMobileNicknameSimple) {
-                        window.loadMobileNicknameSimple();
+                    if (window.loadMobileNickname) {
+                        window.loadMobileNickname();
                     }
                 }, 500);
             }
@@ -342,24 +342,22 @@
         <div class="modal-content" id="modalContent"></div>
     </div>
 
+    <script src="nickname-manager-unified.js"></script>
     <script src="extension-errors-fix.js"></script>
     <script src="pwa-permissions.js"></script>
     <script src="chat-notifications.js"></script>
     <script src="vip-redirect-fix.js"></script>
     <script src="mobile-errors-fix.js"></script>
-    <script src="nickname-sync-fix.js"></script>
-    <script src="nickname-sync-unified.js"></script>
     <script src="popup-fix.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
     <script src="mobile-trades.js"></script>
 
     <script src="mobile-notifications-complete-fix.js"></script>
-    <script src="ranking-nickname-sync.js"></script>
-
-    <script src="fix-nickname-mobile.js"></script>
-
     <script src="mobile-functions-check.js"></script>
     <script src="mobile-fix-urgent.js"></script>
+    <script src="mobile-nickname-cleanup.js"></script>
+    <script src="nickname-system-test.js"></script>
+    <script src="mobile-sync-test.js"></script>
     <script>
         // Variables globales
         let currentUser = null;
@@ -1096,20 +1094,16 @@
                 
                 if (saveBtn && !saveBtn.hasAttribute('data-initialized')) {
                     saveBtn.setAttribute('data-initialized', 'true');
-                    saveBtn.addEventListener('click', (e) => {
+                    saveBtn.addEventListener('click', async (e) => {
                         e.preventDefault();
                         e.stopPropagation();
-                        if (window.saveUnifiedNickname) {
-                            window.saveUnifiedNickname(true); // fromSettings = true
-                        } else {
-                            const input = document.getElementById('mobileNickname');
-                            if (input && input.value.trim()) {
-                                const nickname = input.value.trim();
-                                localStorage.setItem('NICKNAME_FORCE', nickname);
-                                sessionStorage.setItem('userNickname', nickname);
-                                alert('✅ Pseudo sauvegardé !');
-                            }
+                        
+                        // Sauvegarder le pseudo avec le nouveau système
+                        if (window.saveMobileNicknameFromSettings) {
+                            await window.saveMobileNicknameFromSettings();
                         }
+                        
+                        // Sauvegarder les autres paramètres
                         saveMobileAccountSettings();
                     });
                 }

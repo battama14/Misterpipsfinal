@@ -24,7 +24,7 @@ class VIPRanking {
             
             if (!window.firebaseDB) {
                 console.warn('Firebase non disponible, utilisation de données simulées');
-                this.displaySimulatedRanking();
+                setTimeout(() => this.displaySimulatedRanking(), 100);
                 return;
             }
 
@@ -94,12 +94,6 @@ class VIPRanking {
                     
                     console.log(`User ${uid}: ${userTrades.length} trades, ${todayTrades.length} today, $${dailyPnL.toFixed(2)} P&L`);
 
-                    // Les stats sont déjà calculées ci-dessus
-                    const todayTrades = userTrades.filter(trade => 
-                        trade && trade.date === today && 
-                        (trade.status === 'closed' || trade.status === 'completed')
-                    );
-
                     const totalTrades = userTrades.length;
                     const winningTrades = userTrades.filter(t => 
                         (t.status === 'closed' || t.status === 'completed') && 
@@ -108,35 +102,21 @@ class VIPRanking {
                     
                     const winRate = totalTrades > 0 ? (winningTrades / totalTrades * 100) : 0;
 
-                    // Récupérer le pseudo - ORDRE DE PRIORITÉ UNIFIÉ
+                    // Récupérer le pseudo avec le système unifié
                     let nickname = 'Trader VIP';
                     try {
-                        // Priorité 1: users/{uid}/profile/nickname
-                        const profileNicknameRef = ref(window.firebaseDB, `users/${uid}/profile/nickname`);
-                        const profileSnapshot = await get(profileNicknameRef);
-                        if (profileSnapshot.exists() && profileSnapshot.val()) {
-                            nickname = profileSnapshot.val();
+                        // Utiliser la structure unifiée: users/{uid}/nickname
+                        const nicknameRef = ref(window.firebaseDB, `users/${uid}/nickname`);
+                        const nicknameSnapshot = await get(nicknameRef);
+                        if (nicknameSnapshot.exists() && nicknameSnapshot.val()) {
+                            nickname = nicknameSnapshot.val();
                         } else {
-                            // Priorité 2: users/{uid}/nickname
-                            const nicknameRef = ref(window.firebaseDB, `users/${uid}/nickname`);
-                            const nicknameSnapshot = await get(nicknameRef);
-                            if (nicknameSnapshot.exists() && nicknameSnapshot.val()) {
-                                nickname = nicknameSnapshot.val();
-                            } else {
-                                // Priorité 3: ranking/{uid}/nickname
-                                const rankingNicknameRef = ref(window.firebaseDB, `ranking/${uid}/nickname`);
-                                const rankingSnapshot = await get(rankingNicknameRef);
-                                if (rankingSnapshot.exists() && rankingSnapshot.val()) {
-                                    nickname = rankingSnapshot.val();
-                                } else {
-                                    // Fallback: email ou displayName
-                                    nickname = userData.displayName || userData.email?.split('@')[0] || 'Trader VIP';
-                                }
-                            }
+                            // Fallback: userData.nickname ou email
+                            nickname = userData.nickname || userData.displayName || userData.email?.split('@')[0] || 'Trader VIP';
                         }
                     } catch (error) {
                         console.error('Erreur récupération pseudo:', error);
-                        nickname = userData.displayName || userData.email?.split('@')[0] || 'Trader VIP';
+                        nickname = userData.nickname || userData.displayName || userData.email?.split('@')[0] || 'Trader VIP';
                     }
 
                     rankings.push({
@@ -163,6 +143,7 @@ class VIPRanking {
 
         } catch (error) {
             console.error('Erreur chargement classement:', error);
+            console.log('Basculement vers le mode démo');
             this.displaySimulatedRanking();
         } finally {
             this.isLoading = false;
@@ -171,18 +152,14 @@ class VIPRanking {
 
     displayRanking() {
         const rankingContainer = document.getElementById('rankingList');
-        if (!rankingContainer) return;
+        if (!rankingContainer) {
+            console.warn('Container rankingList non trouvé');
+            return;
+        }
 
         if (this.rankings.length === 0) {
-            rankingContainer.innerHTML = `
-                <div class="no-ranking">
-                    <h4>🏆 Classement VIP</h4>
-                    <p>Aucune donnée disponible</p>
-                    <button onclick="window.vipRanking.loadRanking()" class="btn-small btn-primary">
-                        🔄 Actualiser
-                    </button>
-                </div>
-            `;
+            console.log('Aucun classement - affichage du mode démo');
+            this.displaySimulatedRanking();
             return;
         }
 

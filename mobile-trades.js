@@ -367,12 +367,20 @@ async function closeTrade(index, closeType) {
     
     trade.pnl = pnl;
     
-    // Sauvegarder
-    await saveMobileTrades();
+    // Sauvegarder avec synchronisation PC
+    await saveMobileDataComplete();
     
     // Mettre à jour l'affichage
     updateMobileTradesList();
     updateMobileStats();
+    updateMobileCalendar();
+    
+    // Mettre à jour le classement VIP
+    setTimeout(() => {
+        if (window.loadMobileRanking) {
+            window.loadMobileRanking();
+        }
+    }, 1000);
     
     // Notification
     const emoji = closeType === 'tp' ? '✅' : closeType === 'sl' ? '❌' : '⚖️';
@@ -383,16 +391,28 @@ async function closeTrade(index, closeType) {
 async function deleteTrade(index) {
     if (!confirm('Supprimer ce trade ?')) return;
     
-    mobileData.trades.splice(index, 1);
+    const deletedTrade = mobileData.trades[index];
+    console.log('Suppression trade:', deletedTrade);
     
-    // Sauvegarder
-    await saveMobileTrades();
+    mobileData.trades.splice(index, 1);
+    window.mobileTradesData = mobileData.trades;
+    
+    // Sauvegarder avec synchronisation PC
+    await saveMobileDataComplete();
     
     // Mettre à jour l'affichage
     updateMobileTradesList();
     updateMobileStats();
+    updateMobileCalendar();
     
-    alert('✅ Trade supprimé');
+    // Mettre à jour le classement VIP
+    setTimeout(() => {
+        if (window.loadMobileRanking) {
+            window.loadMobileRanking();
+        }
+    }, 1000);
+    
+    alert('✅ Trade supprimé et synchronisé');
 }
 
 // Exposer les fonctions globalement
@@ -571,15 +591,22 @@ function saveMobileTrade() {
     mobileData.trades.push(trade);
     window.mobileTradesData = mobileData.trades;
     
-    saveMobileTrades();
+    // Sauvegarder avec synchronisation PC
+    await saveMobileDataComplete();
+    
     updateMobileTradesList();
     updateMobileStats();
+    updateMobileCalendar();
     
-    if (window.updateMobileCalendar) {
-        window.updateMobileCalendar();
-    }
+    // Mettre à jour le classement VIP
+    setTimeout(() => {
+        if (window.loadMobileRanking) {
+            window.loadMobileRanking();
+        }
+    }, 1000);
     
     closeMobileModal();
+    alert('✅ Trade ajouté et synchronisé');
 }
 
 // Fonction calendrier mobile
