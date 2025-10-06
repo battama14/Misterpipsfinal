@@ -358,6 +358,7 @@
     <script src="mobile-nickname-cleanup.js"></script>
     <script src="nickname-system-test.js"></script>
     <script src="mobile-sync-test.js"></script>
+    <script src="mobile-fixes-urgent.js"></script>
     <script>
         // Variables globales
         let currentUser = null;
@@ -694,53 +695,56 @@
         function showMobileChatNotification(message) {
             const settings = getMobileNotificationSettings();
 
-            // Vérifier permissions et préférences push
+            console.log('🔔 Tentative notification:', message.nickname, message.message);
+            console.log('Permissions:', Notification.permission);
+            console.log('Settings:', settings);
+
+            // Vérifier permissions
             if (Notification.permission !== 'granted') {
-                console.log('❌ Permissions notifications non accordées');
+                console.log('❌ Permissions refusées');
+                // Jouer au moins le son si possible
+                if (settings.sound) {
+                    playMobileNotificationSound();
+                }
                 return;
             }
 
             if (!settings.push) {
-                console.log('🔕 Notifications push désactivées dans les paramètres');
-                return;
-            }
-
-            // Ne pas notifier si l'app est active et sur le chat
-            if (document.hasFocus() && isOnMobileChatSection()) {
-                console.log('🔕 Pas de notification - sur le chat');
-                // Jouer le son même si on est sur le chat (si activé)
+                console.log('🔕 Push désactivé');
+                // Jouer au moins le son
                 if (settings.sound) {
                     playMobileNotificationSound();
                 }
                 return;
             }
 
-            console.log('🔔 Affichage notification mobile:', message.nickname, message.message);
-
             try {
+                console.log('🔔 Création notification...');
+                
                 const notification = new Notification(`💬 ${message.nickname}`, {
                     body: message.message.substring(0, 100),
                     icon: './Misterpips.jpg',
                     badge: './Misterpips.jpg',
-                    tag: 'misterpips-mobile-chat-' + Date.now(),
-                    requireInteraction: false,
-                    silent: true, // Toujours silent car on gère le son manuellement
-                    vibrate: settings.vibrate ? [300, 100, 300] : []
+                    tag: 'misterpips-chat',
+                    requireInteraction: true, // Garder visible
+                    silent: false, // Laisser le navigateur gérer le son
+                    vibrate: settings.vibrate ? [300, 100, 300] : [],
+                    data: { messageId: message.id }
                 });
 
-                // Son personnalisé selon les préférences
+                // Son supplémentaire
                 if (settings.sound) {
-                    playMobileNotificationSound();
+                    setTimeout(() => playMobileNotificationSound(), 100);
                 }
 
-                // Vibration mobile selon les préférences
+                // Vibration
                 if (settings.vibrate && 'vibrate' in navigator) {
                     navigator.vibrate([300, 100, 300]);
                 }
 
                 // Clic pour ouvrir
                 notification.onclick = () => {
-                    console.log('🔔 Clic notification mobile');
+                    console.log('🔔 Clic notification');
                     window.focus();
                     if (window.showMobileSection) {
                         window.showMobileSection('chat');
@@ -749,15 +753,17 @@
                     notification.close();
                 };
 
-                // Auto-fermer après 10 secondes
-                setTimeout(() => {
-                    try {
-                        notification.close();
-                    } catch (e) {}
-                }, 10000);
+                console.log('✅ Notification créée');
 
             } catch (error) {
-                console.error('❌ Erreur création notification mobile:', error);
+                console.error('❌ Erreur notification:', error);
+                // Fallback son + vibration
+                if (settings.sound) {
+                    playMobileNotificationSound();
+                }
+                if (settings.vibrate && 'vibrate' in navigator) {
+                    navigator.vibrate([300, 100, 300]);
+                }
             }
         }
 
@@ -770,14 +776,20 @@
         // Jouer son de notification mobile
         function playMobileNotificationSound() {
             try {
-                // Vérifier si le son est activé
                 const settings = getMobileNotificationSettings();
                 if (!settings.sound) {
-                    console.log('🔇 Son désactivé dans les paramètres');
+                    console.log('🔇 Son désactivé');
                     return;
                 }
 
+                // Créer contexte audio avec interaction utilisateur
                 const audioContext = new (window.AudioContext || window.webkitAudioContext)();
+                
+                // Résumer le contexte si suspendu
+                if (audioContext.state === 'suspended') {
+                    audioContext.resume();
+                }
+                
                 const oscillator = audioContext.createOscillator();
                 const gainNode = audioContext.createGain();
 
@@ -785,17 +797,19 @@
                 gainNode.connect(audioContext.destination);
 
                 oscillator.frequency.setValueAtTime(800, audioContext.currentTime);
-                oscillator.frequency.setValueAtTime(600, audioContext.currentTime + 0.1);
-
-                gainNode.gain.setValueAtTime(0.3, audioContext.currentTime);
-                gainNode.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + 0.5);
+                gainNode.gain.setValueAtTime(0.5, audioContext.currentTime);
+                gainNode.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + 0.3);
 
                 oscillator.start(audioContext.currentTime);
-                oscillator.stop(audioContext.currentTime + 0.5);
+                oscillator.stop(audioContext.currentTime + 0.3);
 
-                console.log('🔊 Son notification mobile joué');
+                console.log('🔊 Son mobile joué');
             } catch (error) {
-                console.log('❌ Erreur son mobile:', error);
+                console.log('❌ Erreur son:', error);
+                // Fallback vibration
+                if ('vibrate' in navigator) {
+                    navigator.vibrate([300, 100, 300]);
+                }
             }
         }
 

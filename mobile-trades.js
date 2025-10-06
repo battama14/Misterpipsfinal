@@ -683,7 +683,12 @@ async function loadMobileRanking() {
         await waitForFirebase();
         
         if (!window.firebaseDB || !window.dbRef || !window.dbGet) {
-            rankingContainer.innerHTML = '<div class="no-ranking">Firebase non disponible</div>';
+            console.log('Firebase status:', {
+                firebaseDB: !!window.firebaseDB,
+                dbRef: !!window.dbRef,
+                dbGet: !!window.dbGet
+            });
+            rankingContainer.innerHTML = '<div class="no-ranking">Firebase non disponible<br><button onclick="window.loadMobileRanking()">Retry</button></div>';
             return;
         }
         
@@ -806,7 +811,10 @@ async function loadMobileRanking() {
         
     } catch (error) {
         console.error('❌ Erreur classement mobile:', error);
-        rankingContainer.innerHTML = '<div class="no-ranking">Erreur de chargement</div>';
+        console.log('Firebase DB:', !!window.firebaseDB);
+        console.log('dbRef:', !!window.dbRef);
+        console.log('dbGet:', !!window.dbGet);
+        rankingContainer.innerHTML = `<div class="no-ranking">Erreur: ${error.message}<br><button onclick="window.loadMobileRanking()">Retry</button></div>`;
     }
 }
 
@@ -1026,9 +1034,21 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     }, 1000);
     
-    // Events
-    document.getElementById('newTradeBtn')?.addEventListener('click', showTradeModal);
-    document.getElementById('addTradeBtn')?.addEventListener('click', showTradeModal);
+    // Events - Corriger les boutons
+    const newTradeBtn = document.getElementById('newTradeBtn');
+    const addTradeBtn = document.getElementById('addTradeBtn');
+    
+    if (newTradeBtn) {
+        newTradeBtn.onclick = showTradeModal;
+        newTradeBtn.addEventListener('click', showTradeModal);
+        console.log('✅ newTradeBtn configuré');
+    }
+    
+    if (addTradeBtn) {
+        addTradeBtn.onclick = showTradeModal;
+        addTradeBtn.addEventListener('click', showTradeModal);
+        console.log('✅ addTradeBtn configuré');
+    }
     document.getElementById('saveSettingsBtn')?.addEventListener('click', () => {
         saveMobileNickname();
     });

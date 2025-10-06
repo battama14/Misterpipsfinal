@@ -35,8 +35,8 @@ class VIPRanking {
             const usersSnapshot = await get(usersRef);
             
             if (!usersSnapshot.exists()) {
-                console.log('Aucun utilisateur trouvé');
-                this.displaySimulatedRanking();
+                console.log('Aucun utilisateur trouvé - mode démo');
+                setTimeout(() => this.displaySimulatedRanking(), 100);
                 return;
             }
 
@@ -144,7 +144,7 @@ class VIPRanking {
         } catch (error) {
             console.error('Erreur chargement classement:', error);
             console.log('Basculement vers le mode démo');
-            this.displaySimulatedRanking();
+            setTimeout(() => this.displaySimulatedRanking(), 100);
         } finally {
             this.isLoading = false;
         }
