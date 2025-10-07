@@ -1,0 +1,392 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Gestion Utilisateurs VIP - Admin</title>
+    <link rel="stylesheet" href="styles.css">
+    <link rel="stylesheet" href="dashboard.css">
+    <style>
+        .admin-container {
+            min-height: 100vh;
+            background: linear-gradient(135deg, #1a1a2e, #16213e);
+            color: white;
+            padding: 20px;
+        }
+        
+        .admin-header {
+            background: rgba(15, 15, 15, 0.95);
+            padding: 20px;
+            border-radius: 15px;
+            margin-bottom: 30px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        
+        .users-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
+            gap: 20px;
+            margin-bottom: 30px;
+        }
+        
+        .user-card {
+            background: rgba(30, 34, 45, 0.95);
+            border: 1px solid rgba(0, 212, 255, 0.3);
+            border-radius: 15px;
+            padding: 20px;
+        }
+        
+        .user-card.admin {
+            border-color: #ff6b6b;
+            background: rgba(45, 30, 30, 0.95);
+        }
+        
+        .user-info h3 {
+            color: #00d4ff;
+            margin-bottom: 10px;
+        }
+        
+        .user-info.admin h3 {
+            color: #ff6b6b;
+        }
+        
+        .user-actions {
+            display: flex;
+            gap: 10px;
+            margin-top: 15px;
+        }
+        
+        .btn-danger {
+            background: #dc3545;
+            color: white;
+            border: none;
+            padding: 8px 15px;
+            border-radius: 5px;
+            cursor: pointer;
+        }
+        
+        .btn-primary {
+            background: #00d4ff;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-weight: bold;
+        }
+        
+        .add-user-form {
+            background: rgba(30, 34, 45, 0.95);
+            border: 2px solid rgba(0, 212, 255, 0.4);
+            border-radius: 15px;
+            padding: 25px;
+            margin-bottom: 30px;
+        }
+        
+        .form-group {
+            margin-bottom: 15px;
+        }
+        
+        .form-group label {
+            display: block;
+            margin-bottom: 5px;
+            color: #00d4ff;
+            font-weight: bold;
+        }
+        
+        .form-group input {
+            width: 100%;
+            padding: 10px;
+            border: 1px solid rgba(0, 212, 255, 0.3);
+            border-radius: 5px;
+            background: rgba(255, 255, 255, 0.1);
+            color: white;
+        }
+        
+        .stats-section {
+            background: rgba(30, 34, 45, 0.95);
+            border-radius: 15px;
+            padding: 25px;
+            margin-bottom: 20px;
+        }
+        
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 20px;
+        }
+        
+        .stat-card {
+            background: rgba(0, 212, 255, 0.1);
+            border: 1px solid rgba(0, 212, 255, 0.3);
+            border-radius: 10px;
+            padding: 20px;
+            text-align: center;
+        }
+        
+        .stat-value {
+            font-size: 2em;
+            font-weight: bold;
+            color: #00d4ff;
+        }
+        
+        .stat-label {
+            color: #ccc;
+            margin-top: 5px;
+        }
+    </style>
+</head>
+<body>
+    <div class="admin-container">
+        <header class="admin-header">
+            <h1>👥 Gestion Utilisateurs VIP</h1>
+            <button onclick="window.location.href='vip-space.html'" class="btn-primary">🔙 Retour VIP</button>
+        </header>
+
+        <!-- Statistiques -->
+        <div class="stats-section">
+            <h2>📊 Statistiques</h2>
+            <div class="stats-grid">
+                <div class="stat-card">
+                    <div class="stat-value" id="totalUsers">0</div>
+                    <div class="stat-label">Utilisateurs VIP</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-value" id="activeUsers">0</div>
+                    <div class="stat-label">Actifs ce mois</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-value" id="adminUsers">0</div>
+                    <div class="stat-label">Administrateurs</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Ajouter utilisateur -->
+        <div class="add-user-form">
+            <h2>➕ Ajouter un Utilisateur VIP</h2>
+            <form id="addUserForm">
+                <div class="form-group">
+                    <label>Email</label>
+                    <input type="email" id="newUserEmail" required>
+                </div>
+                <div class="form-group">
+                    <label>Mot de passe temporaire</label>
+                    <input type="password" id="newUserPassword" required>
+                </div>
+                <div class="form-group">
+                    <label>Pseudo (optionnel)</label>
+                    <input type="text" id="newUserNickname">
+                </div>
+                <button type="submit" class="btn-primary">✅ Créer Utilisateur VIP</button>
+            </form>
+        </div>
+
+        <!-- Liste des utilisateurs -->
+        <div class="users-section">
+            <h2>👥 Utilisateurs VIP</h2>
+            <div id="usersGrid" class="users-grid">
+                <!-- Les utilisateurs seront chargés ici -->
+            </div>
+        </div>
+    </div>
+
+    <script type="module">
+        import { initializeApp } from 'https://www.gstatic.com/firebasejs/10.7.0/firebase-app.js';
+        import { getAuth, createUserWithEmailAndPassword } from 'https://www.gstatic.com/firebasejs/10.7.0/firebase-auth.js';
+        import { getDatabase, ref, set, get, remove } from 'https://www.gstatic.com/firebasejs/10.7.0/firebase-database.js';
+        
+        const firebaseConfig = {
+            apiKey: "AIzaSyDSDK0NfVSs_VQb3TnrixiJbOpTsmoUMvU",
+            authDomain: "misterpips-b71fb.firebaseapp.com",
+            databaseURL: "https://misterpips-b71fb-default-rtdb.europe-west1.firebasedatabase.app",
+            projectId: "misterpips-b71fb",
+            storageBucket: "misterpips-b71fb.firebasestorage.app",
+            messagingSenderId: "574231126409",
+            appId: "1:574231126409:web:b7ed93ac4ea62e247dc158"
+        };
+        
+        const app = initializeApp(firebaseConfig);
+        const auth = getAuth(app);
+        const db = getDatabase(app);
+        
+        const adminEmails = [
+            'admin@misterpips.com', 
+            'misterpips@admin.com',
+            'battama14@gmail.com',
+            'evan.salem.pro@gmail.com'
+        ];
+        
+        // Charger les utilisateurs
+        async function loadUsers() {
+            try {
+                const usersSnapshot = await get(ref(db, 'users'));
+                const users = usersSnapshot.exists() ? usersSnapshot.val() : {};
+                
+                const usersGrid = document.getElementById('usersGrid');
+                usersGrid.innerHTML = '';
+                
+                let totalUsers = 0;
+                let activeUsers = 0;
+                let adminCount = 0;
+                
+                Object.keys(users).forEach(uid => {
+                    const user = users[uid];
+                    if (user.isVIP) {
+                        totalUsers++;
+                        
+                        if (user.lastLogin && new Date(user.lastLogin) > new Date(Date.now() - 30*24*60*60*1000)) {
+                            activeUsers++;
+                        }
+                        
+                        const isAdmin = adminEmails.includes(user.email);
+                        if (isAdmin) adminCount++;
+                        
+                        const userCard = document.createElement('div');
+                        userCard.className = `user-card ${isAdmin ? 'admin' : ''}`;
+                        userCard.innerHTML = `
+                            <div class="user-info ${isAdmin ? 'admin' : ''}">
+                                <h3>${isAdmin ? '🔧 ' : ''}${user.email}</h3>
+                                <p><strong>Pseudo:</strong> ${user.nickname || 'Non défini'}</p>
+                                <p><strong>Plan:</strong> ${user.plan || 'VIP'}</p>
+                                <p><strong>Dernière connexion:</strong> ${user.lastLogin ? new Date(user.lastLogin).toLocaleDateString('fr-FR') : 'Jamais'}</p>
+                                <p><strong>Statut:</strong> ${isAdmin ? 'Administrateur' : 'Utilisateur VIP'}</p>
+                            </div>
+                            <div class="user-actions">
+                                ${!isAdmin ? `<button onclick="deleteUser('${uid}', '${user.email}')" class="btn-danger">🗑️ Supprimer</button>` : '<span style="color: #ff6b6b;">👑 Administrateur</span>'}
+                            </div>
+                        `;
+                        usersGrid.appendChild(userCard);
+                    }
+                });
+                
+                // Mettre à jour les stats
+                document.getElementById('totalUsers').textContent = totalUsers;
+                document.getElementById('activeUsers').textContent = activeUsers;
+                document.getElementById('adminUsers').textContent = adminCount;
+                
+            } catch (error) {
+                console.error('Erreur chargement utilisateurs:', error);
+            }
+        }
+        
+        // Ajouter utilisateur
+        document.getElementById('addUserForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            
+            const email = document.getElementById('newUserEmail').value;
+            const password = document.getElementById('newUserPassword').value;
+            const nickname = document.getElementById('newUserNickname').value;
+            
+            // Sauvegarder l'admin actuel
+            const currentAdmin = auth.currentUser;
+            
+            try {
+                // Vérifier si l'email existe déjà
+                const usersSnapshot = await get(ref(db, 'users'));
+                if (usersSnapshot.exists()) {
+                    const users = usersSnapshot.val();
+                    const emailExists = Object.values(users).some(user => user.email === email);
+                    if (emailExists) {
+                        alert(`❌ Erreur: L'email ${email} est déjà utilisé`);
+                        return;
+                    }
+                }
+                
+                // Créer le compte dans une instance séparée
+                const { initializeApp, deleteApp } = await import('https://www.gstatic.com/firebasejs/10.7.0/firebase-app.js');
+                const { getAuth, createUserWithEmailAndPassword, signOut } = await import('https://www.gstatic.com/firebasejs/10.7.0/firebase-auth.js');
+                
+                // Instance temporaire pour créer l'utilisateur
+                const tempApp = initializeApp(firebaseConfig, 'temp-' + Date.now());
+                const tempAuth = getAuth(tempApp);
+                
+                // Créer le compte avec l'instance temporaire
+                const userCredential = await createUserWithEmailAndPassword(tempAuth, email, password);
+                const newUser = userCredential.user;
+                
+                // Ajouter les données VIP
+                await set(ref(db, `users/${newUser.uid}`), {
+                    email: email,
+                    isVIP: true,
+                    plan: 'VIP',
+                    nickname: nickname || null,
+                    hasLoggedIn: false,
+                    createdAt: new Date().toISOString()
+                });
+                
+                // Déconnecter l'utilisateur temporaire
+                await signOut(tempAuth);
+                
+                // Supprimer l'instance temporaire
+                await deleteApp(tempApp);
+                
+                alert(`✅ Utilisateur VIP créé: ${email}`);
+                
+                // Reset form
+                document.getElementById('addUserForm').reset();
+                
+                // Recharger la liste
+                loadUsers();
+                
+                console.log('✅ Admin reste connecté:', currentAdmin.email);
+                
+            } catch (error) {
+                console.error('Erreur création utilisateur:', error);
+                alert(`❌ Erreur: ${error.message}`);
+            }
+        });
+        
+        // Supprimer utilisateur
+        window.deleteUser = async function(uid, email) {
+            if (!confirm(`⚠️ ATTENTION: Supprimer l'utilisateur ${email} ?\n\nCela supprimera TOUTES ses données:\n- Profil utilisateur\n- Trades et historique\n- Messages chat\n- Classement\n- Paramètres\n\nCette action est IRRÉVERSIBLE !`)) {
+                return;
+            }
+            
+            try {
+                console.log(`🗑️ Suppression complète de l'utilisateur ${uid}`);
+                
+                // Supprimer toutes les données utilisateur
+                const deletions = [
+                    remove(ref(db, `users/${uid}`)),
+                    remove(ref(db, `profiles/${uid}`)),
+                    remove(ref(db, `nicknames/${uid}`)),
+                    remove(ref(db, `ranking/${uid}`)),
+                    remove(ref(db, `trades/${uid}`)),
+                    remove(ref(db, `accounts/${uid}`)),
+                    remove(ref(db, `settings/${uid}`)),
+                    remove(ref(db, `user_data/${uid}`))
+                ];
+                
+                // Supprimer les messages chat de cet utilisateur
+                const chatSnapshot = await get(ref(db, 'vip_chat'));
+                if (chatSnapshot.exists()) {
+                    const messages = chatSnapshot.val();
+                    const userMessages = Object.keys(messages).filter(msgId => 
+                        messages[msgId].userId === uid
+                    );
+                    
+                    userMessages.forEach(msgId => {
+                        deletions.push(remove(ref(db, `vip_chat/${msgId}`)));
+                    });
+                }
+                
+                // Exécuter toutes les suppressions
+                await Promise.all(deletions);
+                
+                alert(`✅ Utilisateur ${email} et toutes ses données supprimés`);
+                loadUsers();
+                
+            } catch (error) {
+                console.error('Erreur suppression:', error);
+                alert(`❌ Erreur: ${error.message}`);
+            }
+        };
+        
+        // Charger au démarrage
+        loadUsers();
+    </script>
+</body>
+</html>

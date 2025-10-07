@@ -190,19 +190,23 @@
         }
 
         function openUserManagement() {
-            window.open('admin-dashboard.html#users', '_blank');
+            window.location.href = 'admin-users.html';
         }
 
         function openAnalytics() {
-            window.open('admin-dashboard.html#dashboard', '_blank');
+            alert('📈 Statistiques en cours de développement');
         }
 
         function openSystemSettings() {
-            window.open('admin-dashboard.html#content', '_blank');
+            alert('⚙️ Paramètres système en cours de développement');
         }
         
         function openContentManager() {
-            window.open('admin-dashboard.html#news', '_blank');
+            alert('📰 Gestionnaire de contenu en cours de développement');
+        }
+        
+        function goToDashboard() {
+            window.location.href = 'dashboard.html';
         }
         
         // Charger les news VIP
