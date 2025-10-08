@@ -147,6 +147,15 @@ class SettingsModal {
                 outline: none;
                 border-color: #00d4ff;
                 box-shadow: 0 0 0 2px rgba(0,212,255,0.2);
+                background: rgba(255,255,255,0.15) !important;
+                color: #ffffff !important;
+            }
+            
+            .setting-item input[type="text"]:not([readonly]),
+            .setting-item input[type="email"]:not([readonly]),
+            .setting-item input[type="number"]:not([readonly]) {
+                background: rgba(255,255,255,0.1) !important;
+                color: #ffffff !important;
             }
             
             .setting-item small {
@@ -219,20 +228,14 @@ class SettingsModal {
             emailInput.value = this.userEmail || '';
         }
         
-        // Pseudo depuis Firebase
+        // Pseudo géré par profiles/{uid}/nickname
         const nicknameInput = document.getElementById('settingsNickname');
-        if (nicknameInput && window.firebaseDB) {
-            try {
-                const { ref, get } = await import('https://www.gstatic.com/firebasejs/10.7.0/firebase-database.js');
-                const nicknameRef = ref(window.firebaseDB, `users/${this.currentUser}/nickname`);
-                const snapshot = await get(nicknameRef);
-                
-                if (snapshot.exists() && snapshot.val()) {
-                    nicknameInput.value = snapshot.val();
-                }
-            } catch (error) {
-                console.error('Erreur chargement pseudo:', error);
-            }
+        if (nicknameInput && window.cleanNicknameSystem) {
+            nicknameInput.readOnly = false;
+            nicknameInput.style.backgroundColor = 'rgba(255,255,255,0.1)';
+            nicknameInput.style.color = '#ffffff';
+            const nickname = await window.cleanNicknameSystem.getCurrentNickname();
+            nicknameInput.value = nickname || '';
         }
         
         // Autres paramètres depuis localStorage
@@ -264,14 +267,12 @@ class SettingsModal {
         const dailyGoalInput = document.getElementById('settingsDailyGoal');
         
         try {
-            // Sauvegarder le pseudo avec le système unifié
-            if (nicknameInput && nicknameInput.value.trim()) {
-                if (window.unifiedNickname) {
-                    const success = await window.unifiedNickname.updateNicknameFromSettings(nicknameInput.value.trim());
-                    if (!success) {
-                        alert('❌ Erreur lors de la sauvegarde du pseudo');
-                        return;
-                    }
+            // Sauvegarder le pseudo avec profiles/{uid}/nickname
+            if (nicknameInput && nicknameInput.value.trim() && window.cleanNicknameSystem) {
+                const success = await window.cleanNicknameSystem.changeNickname(nicknameInput.value.trim());
+                if (!success) {
+                    alert('❌ Erreur lors de la sauvegarde du pseudo');
+                    return;
                 }
             }
             

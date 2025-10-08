@@ -94,7 +94,7 @@ class SimpleTradingDashboard {
             this.currentUser = firebaseUID;
         }
         
-        // Ne pas initialiser automatiquement le pseudo - laissé vide
+        // Le pseudo est géré uniquement par profiles/{uid}/nickname
         
         await this.loadData();
         this.setupEventListeners();
@@ -375,7 +375,7 @@ class SimpleTradingDashboard {
                     lastUpdated: new Date().toISOString()
                 });
                 
-                // NE PAS sauvegarder automatiquement le pseudo - laissé vide par défaut
+                // Le pseudo est géré uniquement par profiles/{uid}/nickname
                 
                 const syncStatus = document.getElementById('syncStatus');
                 if (syncStatus) {

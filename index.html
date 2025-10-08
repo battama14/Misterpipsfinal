@@ -339,16 +339,13 @@
                     lastLogin: new Date().toISOString()
                 });
                 
-                // Détection mobile
-                const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent) ||
-                                (window.innerWidth <= 768 && window.innerHeight <= 1024);
-                
                 if (isFirstLogin) {
                     alert('FÉLICITATIONS ! Bienvenue dans la famille VIP - Misterpips');
                 }
                 
                 // Redirection vers l'espace VIP
                 window.location.href = 'vip-space.html';
+                
             } catch (error) {
                 alert('Identifiants incorrects: ' + error.message);
             }
@@ -359,8 +356,6 @@
                 window.open('https://t.me/misterpips_support', '_blank');
             }
         });
-        
-
     </script>
 </body>
 </html>

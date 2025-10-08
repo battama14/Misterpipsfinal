@@ -63,7 +63,17 @@ async function loadRealFirebaseRanking() {
             const winningTrades = todayTrades.filter(t => parseFloat(t.pnl) > 0).length;
             const winRate = todayTrades.length > 0 ? Math.round((winningTrades / todayTrades.length) * 100) : 0;
             
-            const nickname = userData.nickname || 'Trader VIP';
+            // Récupérer le pseudo depuis profiles/{uid}/nickname
+            let nickname = 'Trader VIP';
+            try {
+                const profileRef = ref(window.firebaseDB, `profiles/${uid}/nickname`);
+                const profileSnapshot = await get(profileRef);
+                if (profileSnapshot.exists() && profileSnapshot.val()) {
+                    nickname = profileSnapshot.val();
+                }
+            } catch (error) {
+                console.log('Pas de pseudo dans profiles pour', uid);
+            }
             
             rankings.push({
                 uid,

@@ -147,7 +147,10 @@ window.addEventListener('load', function() {
                 }
                 
                 const uid = sessionStorage.getItem('firebaseUID');
-                const nickname = sessionStorage.getItem('userNickname') || 'Utilisateur';
+                let nickname = 'Utilisateur';
+                if (window.mobileNicknameSystem) {
+                    nickname = await window.mobileNicknameSystem.getCurrentNickname();
+                }
                 
                 const messageData = {
                     id: `msg_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,

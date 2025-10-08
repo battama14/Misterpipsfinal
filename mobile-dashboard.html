@@ -55,7 +55,7 @@
                 
                 sessionStorage.setItem('firebaseUID', user.uid);
                 sessionStorage.setItem('userEmail', user.email);
-                // Ne jamais sauvegarder l'email comme pseudo
+                // Nettoyer complètement les anciens pseudos
                 sessionStorage.removeItem('userNickname');
                 
                 console.log('🔥 Mobile Firebase prêt:', user.email);
@@ -353,8 +353,12 @@
     
     <!-- Scripts mobiles principaux -->
     <script src="mobile-trades.js"></script>
-    <script src="nickname-blocker.js"></script>
-    <script src="simple-nickname.js"></script>
+    
+    <!-- Système profiles pseudos mobile UNIQUEMENT -->
+    <script src="mobile-profiles-nickname.js?v=2025"></script>
+    
+    <!-- Test du système mobile -->
+    <script src="mobile-test-profiles.js?v=2025"></script>
     
     <!-- Corrections spécifiques -->
     <script src="mobile-trade-fix-final.js"></script>
@@ -365,16 +369,6 @@
     <script src="direct-fix.js"></script>
     <script src="mobile-notifications-enhanced.js"></script>
     <script src="mobile-fix-urgent.js"></script>
-    
-    <!-- Classement -->
-    <script src="ranking-simple-fix.js"></script>
-    <script src="ranking-update-hook.js"></script>
-    <script src="force-ranking-update.js"></script>
-    
-    <!-- Nettoyage -->
-    <script src="cleanup-duplicates.js"></script>
-    <script src="unified-nickname-system.js"></script>
-    <script src="mobile-nickname-settings.js"></script>
     <script>
         // Variables globales
         let currentUser = null;
@@ -577,7 +571,10 @@
             }
             
             const uid = sessionStorage.getItem('firebaseUID');
-            let nickname = sessionStorage.getItem('userNickname') || 'Mobile User';
+            let nickname = 'Mobile User';
+            if (window.mobileNicknameSystem) {
+                nickname = await window.mobileNicknameSystem.getCurrentNickname();
+            }
             
             const messageData = {
                 id: `msg_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
@@ -1058,7 +1055,7 @@
                         e.preventDefault();
                         e.stopPropagation();
                         
-                        // Sauvegarder le pseudo avec le nouveau système
+                        // Sauvegarder le pseudo avec le système mobile unifié
                         if (window.saveMobileNicknameFromSettings) {
                             await window.saveMobileNicknameFromSettings();
                         }
@@ -1203,7 +1200,9 @@
                 
 
                 
-                // Pseudo géré par mobile-fix-simple.js
+                // Pseudo géré par mobile-profiles-nickname.js
+                // Le bouton est configuré automatiquement par le système
+                
                 loadMobileChat();
 
                 // Fix chat - initialiser l'écoute des messages

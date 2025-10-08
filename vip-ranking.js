@@ -102,16 +102,21 @@ class VIPRanking {
                     
                     const winRate = totalTrades > 0 ? (winningTrades / totalTrades * 100) : 0;
 
-                    // Récupérer le pseudo depuis la source unique
+                    // Récupérer le pseudo spécifique à chaque utilisateur
                     let nickname = 'Trader VIP';
                     try {
                         const nicknameRef = ref(window.firebaseDB, `users/${uid}/nickname`);
                         const nicknameSnapshot = await get(nicknameRef);
                         if (nicknameSnapshot.exists() && nicknameSnapshot.val()) {
                             nickname = nicknameSnapshot.val();
+                            console.log(`Pseudo trouvé pour ${uid}:`, nickname);
+                        } else {
+                            console.log(`Aucun pseudo pour ${uid}, utilisation par défaut`);
+                            nickname = `Trader_${uid.substring(0, 6)}`;
                         }
                     } catch (error) {
-                        console.error('Erreur récupération pseudo:', error);
+                        console.error(`Erreur récupération pseudo pour ${uid}:`, error);
+                        nickname = `Trader_${uid.substring(0, 6)}`;
                     }
 
                     rankings.push({
@@ -194,10 +199,19 @@ class VIPRanking {
         const rankingContainer = document.getElementById('rankingList');
         if (!rankingContainer) return;
 
-        // Utiliser le pseudo du chat pour l'utilisateur actuel
+        // Utiliser le pseudo de l'utilisateur actuel depuis Firebase
         let currentUserName = 'Vous';
-        if (window.iMessageChat && window.iMessageChat.nickname) {
-            currentUserName = window.iMessageChat.nickname;
+        try {
+            if (window.firebaseDB && this.currentUser) {
+                const { ref, get } = await import('https://www.gstatic.com/firebasejs/10.7.0/firebase-database.js');
+                const nicknameRef = ref(window.firebaseDB, `users/${this.currentUser}/nickname`);
+                const snapshot = await get(nicknameRef);
+                if (snapshot.exists() && snapshot.val()) {
+                    currentUserName = snapshot.val();
+                }
+            }
+        } catch (error) {
+            console.error('Erreur chargement pseudo utilisateur actuel:', error);
         }
         
         const simulatedData = [
@@ -240,12 +254,21 @@ class VIPRanking {
                 userEntry.todayTrades = todayTrades.length;
                 userEntry.winRate = Math.round(winRate);
                 
-                // Utiliser le pseudo du chat si disponible
+                // Utiliser le pseudo de l'utilisateur depuis Firebase
                 let displayName = 'Vous';
-                if (window.iMessageChat && window.iMessageChat.nickname) {
-                    displayName = window.iMessageChat.nickname;
+                try {
+                    if (window.firebaseDB && this.currentUser) {
+                        const { ref, get } = await import('https://www.gstatic.com/firebasejs/10.7.0/firebase-database.js');
+                        const nicknameRef = ref(window.firebaseDB, `users/${this.currentUser}/nickname`);
+                        const snapshot = await get(nicknameRef);
+                        if (snapshot.exists() && snapshot.val()) {
+                            displayName = snapshot.val();
+                        }
+                    }
+                } catch (error) {
+                    console.error('Erreur chargement pseudo utilisateur:', error);
                 }
-                userEntry.name = displayName + ' (' + todayTrades.length + ' trades)';
+                userEntry.name = displayName;
             }
             
             console.log('Données utilisateur mises à jour:', {
