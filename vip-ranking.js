@@ -102,21 +102,16 @@ class VIPRanking {
                     
                     const winRate = totalTrades > 0 ? (winningTrades / totalTrades * 100) : 0;
 
-                    // Récupérer le pseudo avec le système unifié
+                    // Récupérer le pseudo depuis la source unique
                     let nickname = 'Trader VIP';
                     try {
-                        // Utiliser la structure unifiée: users/{uid}/nickname
                         const nicknameRef = ref(window.firebaseDB, `users/${uid}/nickname`);
                         const nicknameSnapshot = await get(nicknameRef);
                         if (nicknameSnapshot.exists() && nicknameSnapshot.val()) {
                             nickname = nicknameSnapshot.val();
-                        } else {
-                            // Fallback: userData.nickname seulement (pas d'email)
-                            nickname = userData.nickname || 'Trader VIP';
                         }
                     } catch (error) {
                         console.error('Erreur récupération pseudo:', error);
-                        nickname = userData.nickname || 'Trader VIP';
                     }
 
                     rankings.push({
