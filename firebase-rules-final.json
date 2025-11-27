@@ -1,0 +1,54 @@
+{
+  "rules": {
+    "dashboards": {
+      "$uid": {
+        ".read": "$uid === auth.uid || auth.uid === 'tr8b3TuRAeTKAqT9kx00YmQa6gA3'",
+        ".write": "$uid === auth.uid"
+      }
+    },
+    "users": {
+      ".read": "auth.uid === 'tr8b3TuRAeTKAqT9kx00YmQa6gA3'",
+      ".write": "auth.uid === 'tr8b3TuRAeTKAqT9kx00YmQa6gA3'",
+      "$uid": {
+        ".read": "$uid === auth.uid",
+        ".write": "$uid === auth.uid"
+      }
+    },
+    "chat": {
+      ".read": "auth != null",
+      ".write": "auth != null"
+    },
+    "admin": {
+      ".read": "auth.uid === 'tr8b3TuRAeTKAqT9kx00YmQa6gA3'",
+      ".write": "auth.uid === 'tr8b3TuRAeTKAqT9kx00YmQa6gA3'"
+    },
+    "vip-ranking": {
+      ".read": "auth != null",
+      ".write": "auth.uid === 'tr8b3TuRAeTKAqT9kx00YmQa6gA3'"
+    },
+    "news": {
+      ".read": "auth != null",
+      ".write": "auth.uid === 'tr8b3TuRAeTKAqT9kx00YmQa6gA3'"
+    },
+    "public_news": {
+      ".read": true,
+      ".write": "auth.uid === 'tr8b3TuRAeTKAqT9kx00YmQa6gA3'"
+    },
+    "vip_news": {
+      ".read": "auth != null",
+      ".write": "auth.uid === 'tr8b3TuRAeTKAqT9kx00YmQa6gA3'"
+    },
+    "content": {
+      ".read": true,
+      ".write": "auth.uid === 'tr8b3TuRAeTKAqT9kx00YmQa6gA3'"
+    },
+    "page_sections": {
+      ".read": true,
+      ".write": "auth.uid === 'tr8b3TuRAeTKAqT9kx00YmQa6gA3'"
+    },
+    "testimonials": {
+      ".read": true,
+      ".write": "auth.uid === 'tr8b3TuRAeTKAqT9kx00YmQa6gA3'"
+    }
+  }
+}
